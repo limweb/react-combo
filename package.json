@@ -30,7 +30,9 @@
     "normalize.css": "^3.0.2",
     "object-assign": "^2.0.0",
     "react": "^0.12.1",
-    "react-input-field": "^1.0.0"
+    "react-input-field": "^1.0.0",
+    "react-listview": "^0.1.0",
+    "region": "^2.0.1"
   },
   "repository": {
     "type": "git",
