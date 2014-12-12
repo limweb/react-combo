@@ -3,6 +3,7 @@
 var React  = require('react')
 var Field  = require('react-input-field/src')
 var ListView  = require('react-listview/src')
+var ListViewFactory  = React.createFactory(ListView)
 var assign = require('object-assign')
 
 function toUpperFirst(str){
@@ -73,25 +74,86 @@ module.exports = React.createClass({
         arrowWidth  : React.PropTypes.number,
         arrowPadding: React.PropTypes.number,
 
-        showListOnFocus: React.PropTypes.bool
+        showListOnFocus: React.PropTypes.bool,
+        stateful       : React.PropTypes.bool,
+        clearTool      : React.PropTypes.bool,
+        readOnly       : React.PropTypes.bool,
+
+        listStyle : React.PropTypes.object,
+        listProps : React.PropTypes.object,
+
+        fieldStyle: React.PropTypes.object,
+        fieldProps: React.PropTypes.object,
+
+        filterFn: React.PropTypes.func,
+        value: React.PropTypes.any,
+        displayValue: stringOrNumber,
+
+        //if you want to have the id property in the DOM, in a hidden input,
+        //you can specify a string value for this property
+        //and a hidden input will be rendered
+        hiddenName: React.PropTypes.string,
+
+        idProperty: React.PropTypes.string,
+        displayProperty: React.PropTypes.string,
+        placeholder: React.PropTypes.string,
+
+        data: function(props, propName){
+            var value = props[propName]
+
+            if (value){
+                if (!Array.isArray(value) && typeof value.then != 'function'){
+                    return new Error('data property needs to be an array or a promise!')
+                }
+            }
+        },
+
+        onSelect: React.PropTypes.func,
+        onChange: React.PropTypes.func,
+        onFilter: React.PropTypes.func,
+
+        listFactory: React.PropTypes.func
+    },
+
+    filterBy: function(value, arr, displayProperty) {
+
+        value = (value + '').toLowerCase()
+
+        return arr.filter(function(item){
+            var prop = (item[displayProperty] + '').toLowerCase()
+
+            return prop.indexOf(value) === 0
+        })
     },
 
     getInitialState: function(){
         return {
-            listVisible: false,
-            selectedIndex: -1
+            listVisible : false,
+            selectedId  : undefined,
+            filterValue : undefined
         }
     },
 
     getDefaultProps: function(){
         return {
+            defaultStyle: {
+                position: 'relative'
+            },
             arrowColor: '#a8a8a8',
             arrowOverColor: '#7F7C7C',
             arrowWidth: 5,
             arrowHeight: 8,
             arrowPadding: 4,
-            showListOnFocus: true
+            showListOnFocus  : true,
+            stateful: true,
+            loading : false,
+            listPosition: 'bottom',
+            hiddenName: ''
         }
+    },
+
+    isStatefulFiltering: function(props) {
+        return props.stateful
     },
 
     render: function(){
@@ -103,68 +165,138 @@ module.exports = React.createClass({
 
     renderWith: function(props, state){
 
-
-        var list = this.renderList(props.listProps, state)
+        var list = this.renderList(props, state)
+        var hiddenField = props.hiddenName?
+                            <input type="hidden" value={props.value} name={props.hiddenName}/>:
+                            null
 
         return <div {...this.prepareDivProps(props)}>
+            {hiddenField}
             <Field {...props.fieldProps}/>
             {list}
         </div>
     },
 
-    renderList: function(listProps, state){
+    renderList: function(props, state){
+        var listProps = props.listProps
+
         if (!state.listVisible){
-            return
+            listProps.style.display = 'none'
         }
 
-        return <ListView {...listProps} />
+        return (props.listFactory || ListViewFactory)(listProps)
+    },
+
+    prepareSelected: function(props, state) {
+        var listProps  = props.listProps
+        var data       = listProps.data
+        var idProperty = listProps.idProperty
+        var selected
+        var selectedId = typeof state.selectedId == 'undefined'?
+                                props.selectedId:
+                                state.selectedId
+
+        if (typeof selectedId != 'undefined'){
+
+            selected = {}
+            selected[selectedId] = true
+        }
+
+        return selected
     },
 
     prepareListProps: function(props, state){
         var listProps  = assign({}, props.listProps)
         var data       = props.data || listProps.data
-        var idProperty = props.idProperty || listProps.idProperty
-        var selected
 
-        if (~state.selectedIndex){
-            var item = data[state.selectedIndex]
+        var idProperty      = props.idProperty || listProps.idProperty
+        var displayProperty = props.displayProperty || listProps.displayProperty
 
-            if (item){
-                selected = {}
-                selected[item[idProperty]] = true
-            }
-        }
-
-        if (selected){
-            listProps.selected = selected
-        }
-
-        listProps.data            = data
+        listProps.loading         = typeof listProps.loading != 'undefined'? listProps.loading: props.loading
         listProps.idProperty      = idProperty
-        listProps.displayProperty = props.displayProperty || listProps.displayProperty
+        listProps.displayProperty = displayProperty
+        listProps.onRowClick      = this.handleListRowClick.bind(this, props)
+
+        listProps.style = assign({}, props.listStyle, listProps.style)
+
+        listProps.rowStyle = assign({
+            cursor: 'pointer'
+        }, listProps.rowStyle)
 
         return listProps
     },
 
     prepareDivProps: function(props){
-        delete props.data
-        return props
+
+        var divProps = assign({}, props)
+
+        delete divProps.data
+        delete divProps.value
+        delete divProps.placeholder
+
+        return divProps
     },
 
     prepareFieldProps: function(props){
-        var fieldProps = assign({}, props)
+        var fieldProps = assign({}, props, props.fieldProps)
 
+        delete fieldProps.fieldProps
         delete fieldProps.style
+        delete fieldProps.defaultStyle
+        delete fieldProps.readOnly
 
+        if (props.readOnly){
+            fieldProps.inputProps = assign({}, fieldProps.inputProps)
+            fieldProps.inputProps.style = assign({
+                cursor: 'pointer'
+            }, fieldProps.inputProps.style)
+        }
+
+        fieldProps.style = assign({}, props.fieldStyle, fieldProps.style)
         fieldProps.ref = 'field'
-        fieldProps.onFocus = this.handleFocus
-        fieldProps.onBlur  = this.handleBlur
+        fieldProps.onFocus   = this.handleFocus
+        fieldProps.onBlur    = this.handleBlur
         fieldProps.onKeyDown = this.handleKeyDown.bind(this, props)
-        fieldProps.onChange = this.handleChange.bind(this, props)
+        fieldProps.onChange  = this.handleChange.bind(this, props)
+        fieldProps.onSelect  = this.handleSelect.bind(this, props)
 
         delete fieldProps.data
 
         return fieldProps
+    },
+
+    prepareData: function(props, state){
+        var listProps       = props.listProps
+        var displayProperty = listProps.displayProperty
+
+        var data = state.data || props.data || listProps.data
+        var isArray = Array.isArray(data)
+
+        if (isArray && this.isStatefulFiltering(props) && state.filterValue != null && state.filterValue !== ''){
+            data = (props.filterFn || this.filterBy)(state.filterValue, data, displayProperty)
+        }
+
+        if (!isArray && typeof data.then === 'function'){
+
+            listProps.loading = true
+
+            data.then(function(arr){
+                this.setState({
+                    loading: false,
+                    data   : arr
+                })
+            }.bind(this))
+        }
+
+        if (state.data){
+            listProps.loading = false
+        }
+
+        if (!Array.isArray(data)){
+            data = []
+        }
+
+        return data
     },
 
     prepareProps: function(thisProps, state){
@@ -172,9 +304,15 @@ module.exports = React.createClass({
 
         assign(props, thisProps)
 
+        //----- prepare tools
         props.tools = props.tools || this.renderTools
 
-        var listProps  = props.listProps  = this.prepareListProps(props, state)
+        //----- listProps
+        var listProps = props.listProps  = this.prepareListProps(props, state)
+
+        props.data = props.listProps.data = this.prepareData(props, state)
+
+        //------- fieldProps
         var fieldProps = props.fieldProps = this.prepareFieldProps(props, state)
 
         var displayValue = props.displayValue
@@ -184,16 +322,46 @@ module.exports = React.createClass({
             displayValue = this.getDisplayPropertyAt(index, props) || props.value
         }
 
-        props.selectedIndex = index
         fieldProps.value = displayValue
+
+        //------ props.selectedId
+        props.selectedId = this.getIdPropertyAt(index, props)
+
+        //------ listProps.selected
+        var selected  = this.prepareSelected(props, state)
+
+        if (selected){
+            listProps.selected = selected
+        }
+
+        props.className = this.prepareClassName(props)
+        props.style = this.prepareStyle(props)
 
         return props
     },
 
-    getIndexForValue: function(value, props){
+    prepareClassName: function(props){
+        var className = props.className || ''
+
+        className += ' z-combo'
+
+        if (props.readOnly){
+            className += ' z-read-only'
+        }
+
+        return className
+    },
+
+    prepareStyle: function (props) {
+        var style = assign({}, props.defaultStyle, props.style)
+
+        return style
+    },
+
+    getIndexForValue: function(value, props, data){
         var listProps       = props.listProps
         var idProperty      = listProps.idProperty
-        var data            = listProps.data
+        data = data || listProps.data
 
         return findIndexBy(function(item){
             if (item && item[idProperty] === value){
@@ -202,34 +370,35 @@ module.exports = React.createClass({
         }, listProps.data)
     },
 
-    getItemAt: function(index, props){
-        return props.listProps.data[index]
+    getItemAt: function(index, props, data){
+        return (data || props.listProps.data)[index]
     },
 
-    getDisplayPropertyAt: function(index, props){
-        var result = this.getPropertyAt(props.listProps.displayProperty, index, props)
+    getDisplayPropertyAt: function(index, props, data){
+        var result = this.getPropertyAt(props.listProps.displayProperty, index, props, data)
 
         return typeof result != 'undefined'?
                     result:
                     ''
     },
 
-    getIdPropertyAt: function(index, props){
-        return this.getPropertyAt(props.listProps.idProperty, index, props)
+    getIdPropertyAt: function(index, props, data){
+        return this.getPropertyAt(props.listProps.idProperty, index, props, data)
     },
 
-    getPropertyAt: function(propertyName, index, props){
-        var item = this.getItemAt(index, props)
+    getPropertyAt: function(propertyName, index, props, data){
+        var item = this.getItemAt(index, props, data)
 
         return item?
                 item[propertyName]:
                 undefined
     },
 
-    getDisplayValueForValue: function(value, props){
+    getDisplayValueForValue: function(value, props, data){
         var displayProperty = props.listProps.displayProperty
-        var index = this.getIndexForValue(value, props)
-        var data = props.listProps.data
+        var index           = this.getIndexForValue(value, props, data)
+
+        data = data || props.listProps.data
 
         if (~index){
             return data[index][displayProperty]
@@ -278,19 +447,58 @@ module.exports = React.createClass({
     },
 
     handleChange: function(props, value, event){
-        if (this.isListVisible()){
-            var index = this.getIndexForValue(value, props)
 
-            if (!~index){
-                this.setState({
-                    selectedIndex: -1
-                })
-            }
+        var index       = this.getIndexForValue(value, props)
+        var selectedId  = this.getIdPropertyAt(index, props)
+        var filterValue = props.readOnly?
+                            null:
+                            value
 
+        this.setState({
+            selectedId : selectedId
+        })
+
+        this.setListVisible(true)
+
+        var item
+        var data
+        var info = {
+            event: event
         }
 
-        ;(this.props.onChange || emptyFn)(value, this, event);
+        if (~index){
+            data          = props.listProps.data
+            item          = data[index]
+            info.selected = item
+            info.index    = index
+            value         = this.getDisplayPropertyAt(index, props)
+        }
+
+        if (!props.readOnly || ~index){
+            ;(this.props.onChange || emptyFn)(value, info);
+        }
+
+        if (~index){
+
+            this.onSelect(props, value, item, index)
+        }
+
+        this.doFilter(filterValue)
     },
+
+    onSelect: function(props, value, item, index) {
+        ;(this.props.onSelect || emptyFn)(value, item, index)
+    },
+
+    doFilter: function(filterValue){
+        this.setState({
+            filterValue: filterValue
+        })
+
+        ;(this.props.onFilter || emptyFn)(filterValue)
+    },
+
+    handleSelect: function() {},
 
     handleArrowMouseOver: function(){
         this.setState({
@@ -304,11 +512,11 @@ module.exports = React.createClass({
         })
     },
 
-    handleArrowClick: function(event){
+    handleArrowClick: function(){
         this.toggleList()
     },
 
-    handleArrowMouseDown: function(event){
+    handleArrowMouseDown: function(){
     },
 
     handleKeyDown: function(props, event){
@@ -318,6 +526,14 @@ module.exports = React.createClass({
         if (this[fn]){
             this[fn](props, event)
         }
+    },
+
+    handleListRowClick: function(props, item, index) {
+        this.setState({
+            skipShowOnFocus: true
+        })
+        this.confirm(props, index)
+        this.focus()
     },
 
     handleEscapeKeyDown: function(props, event){
@@ -337,17 +553,26 @@ module.exports = React.createClass({
     },
 
     handleEnterKeyDown: function(props, event){
+        this.confirm(props)
+    },
+
+    confirm: function(props, index) {
         if (this.isListVisible()){
+            if (typeof index === 'undefined'){
+                index = this.getIndexForValue(this.state.selectedId, props)
+            }
+
             var data = props.listProps.data
-            var item = data[this.state.selectedIndex]
+            var item = data[index]
             var displayProperty = props.listProps.displayProperty
-            var idProperty = props.listProps.idProperty
+            var idProperty      = props.listProps.idProperty
+
             var text = ''
             var id
 
             if (item){
                 text = item[displayProperty]
-                id = item[idProperty]
+                id   = item[idProperty]
             }
 
             this.notify(id)
@@ -359,8 +584,11 @@ module.exports = React.createClass({
     onArrowNavigation: function(props, dir){
         if (this.isListVisible()){
 
-            var state         = this.state
-            var selectedIndex = state.selectedIndex
+            var state      = this.state
+            var selectedId = typeof state.selectedId === 'undefined'?
+                                    props.selectedId:
+                                    state.selectedId
+            var selectedIndex = this.getIndexForValue(selectedId, props)
             var nextIndex     = selectedIndex + dir
             var data          = props.listProps.data
 
@@ -371,13 +599,16 @@ module.exports = React.createClass({
                 nextIndex = data.length - 1
             }
 
+            selectedId = this.getIdPropertyAt(nextIndex, props)
+
             this.setState({
-                selectedIndex: nextIndex
+                selectedId: selectedId
             })
         } else {
             this.setState({
-                selectedIndex: props.selectedIndex
+                selectedId: props.selectedId
             })
+            this.doFilter(null)
         }
     },
 
@@ -427,6 +658,7 @@ module.exports = React.createClass({
     handleFocus: function(){
         if (this.props.showListOnFocus){
             this.setListVisible(true)
+            this.doFilter(null)
         }
     },
 

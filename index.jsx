@@ -1,5 +1,8 @@
 'use strict';
 
+require('es6-promise').polyfill()
+require('fetch')
+
 var React = require('react')
 var Combo = require('./src')
 
@@ -37,27 +40,84 @@ var gen = (function(){
 })()
 
 
-var VALUE = 'xxx'
+var VALUE = {}
 
-var LEN = 10
+var LEN = 20
+var initial = true
+
+var initialData = gen(LEN)
+var data = initialData.concat()
 
 var App = React.createClass({
 
-    onChange: function(value){
-        VALUE = value
+    onChange: function(value, info){
+        VALUE.display = value
+
+        VALUE.id = info.selected?
+                    info.selected.id:
+                    ''
+
         this.setState({})
+
+        // console.log('change: ', value)
+    },
+
+    onSelect: function(value, item) {
+        // VALUE = {
+
+        // }
+        // this.setState({})
+        // console.log(item)
     },
 
     handleFocus: function(){
-        console.log('focused')
+
     },
 
     onKeyDown: function(){
         // console.log('key down')
     },
 
+    onFilter: function(value) {
+
+        if (!value){
+            data = initialData
+        } else {
+
+            data = initialData.filter(function(item){
+                return item.firstName.toLowerCase().indexOf(value.toLowerCase()) === 0
+            })
+        }
+
+        this.setState({})
+    },
+
     render: function() {
-        var data = gen(LEN)
+
+
+
+        if (initial){
+            VALUE = {
+                id: data[3].id,
+                display: data[3].firstName
+            }
+        }
+
+        var v = VALUE
+
+        initial = false
+
+        var d = data
+        // data = new Promise(function(accept, reject){
+        //     setTimeout(function(){
+        //         accept(d)
+        //     }, 3000)
+        // })
+
+        var listStyle = {
+            minHeight: 300,
+            border: '1px solid gray'
+        }
 
         return (
             <div className="App" style={{padding: 10}}>
@@ -65,15 +125,21 @@ var App = React.createClass({
                     style={{
                         display: 'inline-block'
                     }}
-                    readOnly={true}
                     idProperty      ='id'
                     displayProperty ='firstName'
                     data            ={data}
+                    statefulx={true}
+                    clearTool={true}
                     onFocus         ={this.handleFocus}
                     placeholder     ="test"
-                    value           ={VALUE}
+                    value           ={v.id}
+                    hiddenName           ={'v.id'}
+                    displayValue    ={v.display}
                     onChange        ={this.onChange}
+                    onSelect        ={this.onSelect}
+                    onFilterx        ={this.onFilter}
                     onKeyDown        ={this.onKeyDown}
+                    listStyle={listStyle}
                 />
             </div>
         )
