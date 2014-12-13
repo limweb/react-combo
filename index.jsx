@@ -50,19 +50,28 @@ var data = initialData.concat()
 
 var App = React.createClass({
 
-    onChange: function(value, info){
-        VALUE.display = value
+    onChange: function(text, value, info){
+        VALUE = value
+        // console.log('TEXT:', text, ', VALUE:',value)
+        // VALUE.display = text
+        // VALUE.id = value
 
-        VALUE.id = info.selected?
-                    info.selected.id:
-                    ''
+
+
+        // if (info.selected){
+        //     VALUE = info.selected.id
+        // }
+        // VALUE.id = info.selected?
+        //             info.selected.id:
+        //             ''
 
         this.setState({})
 
         // console.log('change: ', value)
     },
 
-    onSelect: function(value, item) {
+    onSelect: function(text, value, item) {
+        console.log('select', text, value)
         // VALUE = {
 
         // }
@@ -97,10 +106,7 @@ var App = React.createClass({
 
 
         if (initial){
-            VALUE = {
-                id: data[3].id,
-                display: data[3].firstName
-            }
+            VALUE = data[3].id
         }
 
         var v = VALUE
@@ -111,7 +117,7 @@ var App = React.createClass({
         // data = new Promise(function(accept, reject){
         //     setTimeout(function(){
         //         accept(d)
-        //     }, 3000)
+        //     }, 1)
         // })
 
         var listStyle = {
@@ -132,9 +138,9 @@ var App = React.createClass({
                     clearTool={true}
                     onFocus         ={this.handleFocus}
                     placeholder     ="test"
-                    value           ={v.id}
+                    value           ={v}
                     hiddenName           ={'v.id'}
-                    displayValue    ={v.display}
+                    displayValuex    ={v.display}
                     onChange        ={this.onChange}
                     onSelect        ={this.onSelect}
                     onFilterx        ={this.onFilter}
