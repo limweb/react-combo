@@ -42,7 +42,7 @@ var gen = (function(){
 
 var VALUE = {}
 
-var LEN = 20
+var LEN = 100
 var initial = true
 
 var initialData = gen(LEN)
@@ -121,15 +121,16 @@ var App = React.createClass({
         // })
 
         var listStyle = {
-            minHeight: 300,
             border: '1px solid gray'
         }
 
         return (
-            <div className="App" style={{padding: 10}}>
+            <div className="App" style={{padding: 10, height: 200}}>
                 <Combo
                     style={{
                         display: 'inline-block'
+                        // ,
+                        // top: 500
                     }}
                     idProperty      ='id'
                     displayProperty ='firstName'

@@ -64,6 +64,10 @@ module.exports = React.createClass({
 
     displayName: 'ReactCombo',
 
+    mixins: [
+        require('./ConstrainListMixin')
+    ],
+
     propTypes: {
 
         arrowColor: React.PropTypes.string,
@@ -112,7 +116,10 @@ module.exports = React.createClass({
         onChange: React.PropTypes.func,
         onFilter: React.PropTypes.func,
 
-        listFactory: React.PropTypes.func
+        listFactory  : React.PropTypes.func,
+        onShowList   : React.PropTypes.func,
+        renderList   : React.PropTypes.func,
+        constrainList: React.PropTypes.func
     },
 
     filterBy: function(value, arr, displayProperty) {
@@ -148,7 +155,8 @@ module.exports = React.createClass({
             stateful: true,
             loading : false,
             listPosition: 'bottom',
-            hiddenName: ''
+            hiddenName: '',
+            constrainTo: true
         }
     },
 
@@ -179,12 +187,27 @@ module.exports = React.createClass({
 
     renderList: function(props, state){
         var listProps = props.listProps
+        var visible   = state.listVisible
 
-        if (!state.listVisible){
+        if (!visible){
             listProps.style.display = 'none'
         }
 
-        return (props.listFactory || ListViewFactory)(listProps)
+        if (visible){
+            ;(props.onShowList || emptyFn)(listProps)
+
+            if (props.constrainTo){
+                this.constrainList(props, listProps, props.constrainTo)
+            }
+        }
+
+        var list = (props.listFactory || ListViewFactory)(listProps)
+
+        if (typeof props.renderList === 'function'){
+            return props.renderList(list)
+        }
+
+        return list
     },
 
     prepareSelected: function(props, state) {
@@ -222,6 +245,8 @@ module.exports = React.createClass({
         listProps.rowStyle = assign({
             cursor: 'pointer'
         }, listProps.rowStyle)
+
+        listProps.ref = "list"
 
         return listProps
     },
@@ -689,7 +714,9 @@ module.exports = React.createClass({
     },
 
     getInput: function(){
-        return this.refs.field.getInput()
+        return this.refs.field?
+                    this.refs.field.getInput():
+                    null
     },
 
     focus: function(){
