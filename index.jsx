@@ -1,7 +1,7 @@
 'use strict';
 
-require('es6-promise').polyfill()
-require('fetch')
+// require('es6-promise').polyfill()
+// require('fetch')
 
 var React = require('react')
 var Combo = require('./src')
