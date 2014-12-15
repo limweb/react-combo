@@ -2,16 +2,18 @@
 
 var Region = require('region')
 var assign = require('object-assign')
+var selectParent = require('select-parent')
 
 module.exports = function(props, listProps, constrainTo){
     var constrainRegion
 
     if (constrainTo === true){
-        constrainRegion = Region.from(this.getDOMNode().parentNode)
+        constrainRegion = Region.getDocRegion()
     }
 
     if (typeof constrainTo === 'string'){
-        constrainRegion = Region.from(document.querySelector(constrainTo))
+        var parent = selectParent(constrainTo, this.getDOMNode())
+        constrainRegion = Region.from(parent)
     }
 
     if (typeof constrainTo === 'function'){

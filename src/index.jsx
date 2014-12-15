@@ -210,14 +210,16 @@ module.exports = React.createClass({
         return list
     },
 
-    prepareSelected: function(props, state) {
-        var listProps  = props.listProps
-        var data       = listProps.data
-        var idProperty = listProps.idProperty
-        var selected
-        var selectedId = typeof state.selectedId == 'undefined'?
+    getSelectedId: function(props, state){
+        return typeof state.selectedId == 'undefined'?
                                 props.selectedId:
                                 state.selectedId
+
+    },
+
+    prepareSelected: function(props, state) {
+        var selectedId = this.getSelectedId(props, state)
+        var selected
 
         if (typeof selectedId != 'undefined'){
 
@@ -364,7 +366,21 @@ module.exports = React.createClass({
         props.className = this.prepareClassName(props)
         props.style = this.prepareStyle(props)
 
+        var selectedId = this.getSelectedId(props, state)
+
+        if (selectedId){
+            setTimeout(function(){
+                this.scrollToRowById(selectedId)
+            }.bind(this))
+        }
+
         return props
+    },
+
+    scrollToRowById: function(id){
+        if (this.isMounted()){
+            this.refs.list.scrollToRowById(id)
+        }
     },
 
     prepareClassName: function(props){

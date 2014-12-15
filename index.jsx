@@ -106,7 +106,7 @@ var App = React.createClass({
 
 
         if (initial){
-            VALUE = data[3].id
+            VALUE = data[30].id
         }
 
         var v = VALUE
@@ -125,13 +125,14 @@ var App = React.createClass({
         }
 
         return (
-            <div className="App" style={{padding: 10, height: 200}}>
+            <div className="App" style={{padding: 10, height: 400}}>
                 <Combo
                     style={{
                         display: 'inline-block'
                         // ,
                         // top: 500
                     }}
+                    constrainTo={'.App'}
                     idProperty      ='id'
                     displayProperty ='firstName'
                     data            ={data}
