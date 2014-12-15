@@ -24,7 +24,7 @@ var gen = (function(){
 
         for (var i = 0; i < len; i++){
             arr.push({
-                id       : i + 1,
+                id       : i,
                 grade      : Math.round(Math.random() * 10),
                 email    : faker.internet.email(),
                 firstName: faker.name.firstName(),
@@ -52,7 +52,7 @@ var App = React.createClass({
 
     onChange: function(text, value, info){
         VALUE = value
-        // console.log('TEXT:', text, ', VALUE:',value)
+        console.log('TEXT:', text, ', VALUE:',value)
         // VALUE.display = text
         // VALUE.id = value
 
@@ -111,6 +111,12 @@ var App = React.createClass({
 
         var v = VALUE
 
+        var listProps = {
+            rowFactory: function(props){
+                return <li {...props} />
+            }
+        }
+
         initial = false
 
         var d = data
@@ -124,7 +130,10 @@ var App = React.createClass({
             border: '1px solid gray'
         }
 
+        function f(filterValue, data){}
+
         return (
+            <div>
             <div className="App" style={{padding: 10, height: 400}}>
                 <Combo
                     style={{
@@ -132,23 +141,32 @@ var App = React.createClass({
                         // ,
                         // top: 500
                     }}
-                    constrainTo={'.App'}
+                    constrainTo     ={'.App'}
                     idProperty      ='id'
                     displayProperty ='firstName'
                     data            ={data}
-                    statefulx={true}
-                    clearTool={true}
-                    onFocus         ={this.handleFocus}
+                    clearTool       ={true}
+                    readOnly       ={false}
+                    forceSelect     ={false}
+                    updateOnNavigate={false}
                     placeholder     ="test"
-                    value           ={v}
-                    hiddenName           ={'v.id'}
-                    displayValuex    ={v.display}
+                    value    ={v}
+
+                    Xstateful={true}
+                    XonFocus         ={this.handleFocus}
+                    XhiddenName           ={'v.id'}
+                    XdisplayValue    ={v.display}
                     onChange        ={this.onChange}
-                    onSelect        ={this.onSelect}
-                    onFilterx        ={this.onFilter}
-                    onKeyDown        ={this.onKeyDown}
+                    XonSelect        ={this.onSelect}
+                    XonFilter        ={this.onFilter}
+                    XonKeyDown        ={this.onKeyDown}
+                    listProps={listProps}
                     listStyle={listStyle}
                 />
+
+            </div>
+                <input placeholder="email"/>
+                <input placeholder="text"/>
             </div>
         )
     }
