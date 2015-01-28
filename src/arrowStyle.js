@@ -9,12 +9,7 @@ module.exports = function arrowStyle(side, props){
 
     var style = {
         borderLeft : arrowWidth + 'px solid transparent',
-        borderRight: arrowWidth + 'px solid transparent',
-
-        marginTop: -Math.round(arrowHeight/2) + 'px',
-        position : 'relative',
-
-        top: '50%'
+        borderRight: arrowWidth + 'px solid transparent'
     }
 
     style[side === 'up'? 'borderBottom': 'borderTop'] = arrowHeight + 'px solid ' + arrowColor

@@ -132,7 +132,7 @@ var App = React.createClass({
 
         var fp = {
             style: {
-                border: '2px solid red'
+                // border: '2px solid red'
             }
         }
 
@@ -153,7 +153,6 @@ var App = React.createClass({
                         // ,
                         // top: 500
                     }}
-                    disabled={true}
                     constrainTo     ={'.App'}
                     idProperty      ='id'
                     displayProperty ='firstName'
