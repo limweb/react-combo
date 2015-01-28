@@ -30,8 +30,8 @@
     "normalize.css": "^3.0.2",
     "object-assign": "^2.0.0",
     "react": "^0.12.2",
-    "react-field-component-utils": "^1.0.0",
-    "react-input-field": "^1.0.0",
+    "react-field-component-utils": "radubrehar/react-field-component-utils",
+    "react-input-field": "radubrehar/react-input-field",
     "react-listview": "radubrehar/react-listview",
     "region": "^2.1.1",
     "select-parent": "^1.0.0"

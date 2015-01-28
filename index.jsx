@@ -142,25 +142,22 @@ var App = React.createClass({
             console.log('clicked', e.target)
         }
 
-        var wp = {
-            onMouseDown: onClick
-        }
 
         return (
             <div>
             <div className="App" style={{padding: 10, height: 400}}>
                 <Combo
                     style={{
-                        display: 'inline-block',
+                        
                         padding: 20
                         // ,
                         // top: 500
                     }}
+                    disabled={true}
                     constrainTo     ={'.App'}
                     idProperty      ='id'
                     displayProperty ='firstName'
                     data            ={data}
-                    clearTool       ={true}
                     readOnly       ={false}
                     forceSelect     ={false}
                     updateOnNavigate={false}
@@ -178,7 +175,6 @@ var App = React.createClass({
                     listProps={listProps}
                     listStyle={listStyle}
                     fieldProps={fp}
-                    wrapperProps={wp}
                 />
 
             </div>
