@@ -19,11 +19,14 @@ var stringOrNumber = React.PropTypes.oneOfType([
     React.PropTypes.number
 ])
 
+var Utils = require('react-field-component-utils')
+
 module.exports = React.createClass({
 
     displayName: 'ReactCombo',
 
     mixins: [
+        Utils,
         require('./ConstrainListMixin')
     ],
 
@@ -135,7 +138,7 @@ module.exports = React.createClass({
                             <input type="hidden" value={this.getValue(props, state)} name={props.hiddenName}/>:
                             null
 
-        return <div {...this.prepareDivProps(props, state)}>
+        return <div {...this.prepareWrapperProps(props, state)}>
             {hiddenField}
             <Field {...props.fieldProps}/>
             {list}
@@ -210,26 +213,24 @@ module.exports = React.createClass({
         return listProps
     },
 
-    prepareDivProps: function(props, state){
+    prepareWrapperProps: function(props, state){
 
-        var divProps = assign({}, props)
+        var wrapperProps = this._prepareWrapperProps(props, state)
 
-        delete divProps.data
-        delete divProps.value
-        delete divProps.placeholder
+        wrapperProps['data-value'] = this.getValue(props, state)
 
-        divProps['data-value'] = this.getValue(props, state)
-
-        return divProps
+        return wrapperProps
     },
 
     prepareFieldProps: function(props){
-        var fieldProps = assign({}, props, props.fieldProps)
+        var fieldProps = assign({}, props)
 
         delete fieldProps.fieldProps
         delete fieldProps.style
         delete fieldProps.defaultStyle
         delete fieldProps.readOnly
+
+        assign(fieldProps, props.fieldProps)
 
         if (props.readOnly){
             fieldProps.inputProps = assign({}, fieldProps.inputProps)
@@ -240,11 +241,11 @@ module.exports = React.createClass({
 
         fieldProps.ref = 'field'
 
-        fieldProps.style       = assign({}, props.fieldStyle, fieldProps.style)
-        fieldProps.onFocus     = this.handleFocus
-        fieldProps.onBlur      = this.handleBlur
-        fieldProps.onKeyDown   = this.handleKeyDown.bind(this, props)
-        fieldProps.onChange    = this.handleChange.bind(this, props)
+        fieldProps.style     = assign({}, props.fieldStyle, fieldProps.style)
+        fieldProps.onFocus   = this.handleFocus
+        fieldProps.onBlur    = this.handleBlur
+        fieldProps.onKeyDown = this.handleKeyDown.bind(this, props)
+        fieldProps.onChange  = this.handleChange.bind(this, props)
 
         delete fieldProps.data
 
@@ -748,14 +749,24 @@ module.exports = React.createClass({
         this.notify(id)
     },
 
-    handleFocus: function(){
+    handleFocus: function(event){
         if (this.props.showListOnFocus){
             this.setListVisible(true)
             this.doFilter(null)
         }
+
+        var fieldProps = props.fieldProps
+
+        if (fieldProps && fieldProps.onFocus){
+            fieldProps.onFocus(event)
+        }
+
+        if (this.props.onFocus){
+            this.props.onFocus(event)
+        }
     },
 
-    handleBlur: function() {
+    handleBlur: function(event) {
 
         var props = this.props
         var state = this.state
@@ -773,5 +784,11 @@ module.exports = React.createClass({
         this.setState({
             listVisible: false
         })
+
+        var fieldProps = props.fieldProps
+
+        if (fieldProps && fieldProps.onBlur){
+            fieldProps.onBlur(event)
+        }
     }
 })

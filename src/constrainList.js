@@ -11,12 +11,12 @@ module.exports = function(props, listProps, constrainTo){
         constrainRegion = Region.getDocRegion()
     }
 
-    if (typeof constrainTo === 'string'){
+    if (!constrainRegion && typeof constrainTo === 'string'){
         var parent = selectParent(constrainTo, this.getDOMNode())
         constrainRegion = Region.from(parent)
     }
 
-    if (typeof constrainTo === 'function'){
+    if (!constrainRegion && typeof constrainTo === 'function'){
         constrainRegion = Region.from(constrainTo())
     }
 

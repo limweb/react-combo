@@ -130,14 +130,29 @@ var App = React.createClass({
             border: '1px solid gray'
         }
 
+        var fp = {
+            style: {
+                border: '2px solid red'
+            }
+        }
+
         function f(filterValue, data){}
+
+        function onClick(e){
+            console.log('clicked', e.target)
+        }
+
+        var wp = {
+            onMouseDown: onClick
+        }
 
         return (
             <div>
             <div className="App" style={{padding: 10, height: 400}}>
                 <Combo
                     style={{
-                        display: 'inline-block'
+                        display: 'inline-block',
+                        padding: 20
                         // ,
                         // top: 500
                     }}
@@ -162,6 +177,8 @@ var App = React.createClass({
                     XonKeyDown        ={this.onKeyDown}
                     listProps={listProps}
                     listStyle={listStyle}
+                    fieldProps={fp}
+                    wrapperProps={wp}
                 />
 
             </div>
