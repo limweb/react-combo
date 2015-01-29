@@ -26,12 +26,11 @@
     "webpack-dev-server": "^1.6.6"
   },
   "dependencies": {
-    "1.0.1": "^1.0.0",
     "css-utils": "^0.4.2",
     "normalize.css": "^3.0.2",
     "object-assign": "^2.0.0",
     "react": "^0.12.2",
-    "react-field-component-utils": "^1.0.1",
+    "react-field-component-utils": "radubrehar/react-field-component-utils",
     "react-input-field": "radubrehar/react-input-field",
     "react-listview": "radubrehar/react-listview",
     "react-prefixr": "^0.1.0",
