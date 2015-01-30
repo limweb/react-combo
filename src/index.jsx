@@ -46,6 +46,7 @@ module.exports = React.createClass({
         clearTool      : React.PropTypes.bool,
         readOnly       : React.PropTypes.bool,
         forceSelect    : React.PropTypes.bool,
+        dd             : React.PropTypes.bool,
 
         listStyle : React.PropTypes.object,
         listProps : React.PropTypes.object,
@@ -114,6 +115,9 @@ module.exports = React.createClass({
             defaultDisabledFieldStyle: {
                 background: 'rgb(235, 235, 228)'
             },
+            dropDownInputStyle: {
+                background: 'white'
+            },
             arrowColor: '#a8a8a8',
             arrowOverColor: '#7F7C7C',
             arrowWidth: 5,
@@ -163,7 +167,7 @@ module.exports = React.createClass({
             <Field {...props.fieldProps}>
                 {list}
             </Field>
-            
+
         </div>
     },
 
@@ -240,8 +244,17 @@ module.exports = React.createClass({
         var wrapperProps = this._prepareWrapperProps(props, state)
 
         wrapperProps['data-value'] = this.getValue(props, state)
+        wrapperProps.onMouseDown = this.handleMouseDown
 
         return wrapperProps
+    },
+
+    handleMouseDown: function(event) {
+        ;(this.props.onMouseDown || emptyFn)(event)
+
+        if (this.props.dd){
+            this.toggleList()
+        }
     },
 
     prepareFieldProps: function(props){
@@ -254,11 +267,17 @@ module.exports = React.createClass({
 
         assign(fieldProps, props.fieldProps)
 
+        var ddStyle
+        if (props.dd){
+            fieldProps.disabled = true
+            ddStyle = props.dropDownInputStyle
+        }
+
         if (props.readOnly){
             fieldProps.inputProps = assign({}, fieldProps.inputProps)
             fieldProps.inputProps.style = assign({
                 cursor: 'pointer'
-            }, fieldProps.inputProps.style)
+            }, ddStyle, fieldProps.inputProps.style)
         }
 
         fieldProps.ref = 'field'
@@ -340,6 +359,12 @@ module.exports = React.createClass({
         var listProps = props.listProps  = this.prepareListProps(props, state)
 
         props.data = props.listProps.data = this.prepareData(props, state)
+
+        if (props.dd){
+            props.forceSelect = true
+            props.readOnly    = true
+            props.clearTool   = false
+        }
 
         //------- fieldProps
         var fieldProps = props.fieldProps = this.prepareFieldProps(props, state)
@@ -768,7 +793,23 @@ module.exports = React.createClass({
             this.setState({
                 listVisible: value
             })
+
+            if (this.props.dd){
+
+                if (value) {
+                    setTimeout(function(){
+                        window.addEventListener('mousedown', this.onWindowMouseDown)
+                    }.bind(this), 1)
+                } else {
+                    window.removeEventListener('mousedown', this.onWindowMouseDown)
+                }
+            }
         }
+    },
+
+    onWindowMouseDown: function(){
+        this.setListVisible(false)
+        window.removeEventListener('mousedown', this.onWindowMouseDown)
     },
 
     toggleList: function(){
@@ -802,7 +843,7 @@ module.exports = React.createClass({
     },
 
     handleFocus: function(event){
-        if (this.props.showListOnFocus){
+        if (this.props.showListOnFocus && !this.props.dd){
             this.setListVisible(true)
             this.doFilter(null)
         }
