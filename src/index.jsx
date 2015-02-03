@@ -2,7 +2,7 @@
 
 var React  = require('react')
 var assign = require('object-assign')
-var prefixer = require('react-prefixr')
+var prefixer = require('react-style-normalizer')
 var Field  = require('react-input-field/src')
 
 var ListView        = require('react-listview/src')
@@ -78,13 +78,13 @@ module.exports = React.createClass({
             }
         },
 
-        onSelect: React.PropTypes.func,
-        onChange: React.PropTypes.func,
-        onFilter: React.PropTypes.func,
-        validate: React.PropTypes.func,
+        onSelect  : React.PropTypes.func,
+        onChange  : React.PropTypes.func,
+        onFilter  : React.PropTypes.func,
+        onShowList: React.PropTypes.func,
+        validate  : React.PropTypes.func,
 
         listFactory  : React.PropTypes.func,
-        onShowList   : React.PropTypes.func,
         renderList   : React.PropTypes.func,
         constrainList: React.PropTypes.func
     },
@@ -174,6 +174,8 @@ module.exports = React.createClass({
     renderList: function(props, state){
         var listProps = props.listProps
         var visible   = state.listVisible
+
+        listProps.visible = visible
 
         if (!visible){
             listProps.style.display = 'none'
