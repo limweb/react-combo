@@ -5,6 +5,7 @@
 
 var React = require('react')
 var Combo = require('./src')
+var ListView = require('react-listview/src')
 
 require('./index.styl')
 
@@ -44,9 +45,14 @@ var VALUE = {}
 
 var LEN = 100
 var initial = true
+var selected = {}
 
 var initialData = gen(LEN)
 var data = initialData.concat()
+
+function log(){
+    console.log(arguments)
+}
 
 var App = React.createClass({
 
@@ -106,6 +112,8 @@ var App = React.createClass({
 
 
         if (initial){
+            selected[data[18].id] = data[18]
+            selected[data[20].id] = data[20]
             VALUE = data[30].id
         }
 
@@ -142,14 +150,16 @@ var App = React.createClass({
             console.log('clicked', e.target)
         }
 
+        console.log(v)
 
         return (
             <div>
             <div className="App" style={{padding: 10, height: 400}}>
                 <Combo
                     style={{
-                        
-                        padding: 20
+
+                        padding: 20,
+                        width: 400
                         // ,
                         // top: 500
                     }}
@@ -159,7 +169,9 @@ var App = React.createClass({
                     data            ={data}
                     readOnly       ={false}
                     forceSelect     ={false}
-                    updateOnNavigate={false}
+                    defaultSelected={selected}
+                    multiSelect     ={true}
+                    updateOnNavigate={true}
                     placeholder     ="test"
                     value    ={v}
 
@@ -179,6 +191,10 @@ var App = React.createClass({
             </div>
                 <input placeholder="email"/>
                 <input placeholder="text"/>
+                <ListView data={data} idProperty='id' displayProperty='firstName'
+                style={{width: 300, height: 400}}
+                onRowClick={log}
+                />
             </div>
         )
     }
