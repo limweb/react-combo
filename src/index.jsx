@@ -5,6 +5,7 @@ var assign = require('object-assign')
 var prefixer = require('react-style-normalizer')
 var Field  = require('react-input-field/src')
 var TagField  = require('react-tag-editor/src')
+var buffer = require('buffer-function')
 
 var EVENT_NAMES = require('react-event-names')
 
@@ -125,7 +126,13 @@ module.exports = React.createClass({
                 background: 'white'
             },
             defaultFieldProps: {
-                selectableTags: true
+                selectableTags: true,
+                innerStyle: {
+                    overflow: 'hidden'
+                }
+            },
+            activeRowStyle: {
+                background: '#e1edff'
             },
             arrowColor: '#a8a8a8',
             arrowOverColor: '#7F7C7C',
@@ -283,13 +290,25 @@ module.exports = React.createClass({
 
         listProps.style = assign({}, props.defaultListStyle, props.listStyle, listProps.style)
 
-        listProps.rowStyle = assign({
-            cursor: 'pointer'
-        }, listProps.rowStyle)
+        listProps.rowStyle = this.rowStyle.bind(this, props, state, listProps)
 
         listProps.ref = "list"
 
         return listProps
+    },
+
+    rowStyle: function(props, state, listProps, item, index, rowProps) {
+        var activeStyle
+
+        if (props.selectedId === item[listProps.idProperty]){
+            activeStyle = props.activeRowStyle
+        }
+
+        var style = assign({
+                    cursor: 'pointer'
+                }, listProps.rowStyle, activeStyle)
+
+        return style
     },
 
     prepareWrapperProps: function(props, state){
@@ -348,7 +367,7 @@ module.exports = React.createClass({
         }
 
         fieldProps.style     = assign({}, props.defaultFieldStyle, disabled1Style, props.fieldStyle, disabled2Style, fieldProps.style)
-        fieldProps.onFocus   = this.handleFocus
+        fieldProps.onFocus   = this.handleFocus.bind(this, props)
         fieldProps.onBlur    = this.handleBlur
         fieldProps.onKeyDown = this.handleKeyDown.bind(this, props)
         fieldProps.onChange  = this.handleChange.bind(this, props)
@@ -365,12 +384,27 @@ module.exports = React.createClass({
     prepareData: function(props, state){
         var listProps       = props.listProps
         var displayProperty = listProps.displayProperty
+        var idProperty = listProps.idProperty
 
         var data    = state.data || props.data || listProps.data
         var isArray = Array.isArray(data)
+        var filteredData = data
+        var filterOutSelected = !!(props.selected && props.multiSelect && props.filterOutSelected)
+        var shouldFilter = state.filterValue != null && state.filterValue !== ''
 
-        if (isArray && this.isStatefulFiltering(props) && state.filterValue != null && state.filterValue !== ''){
-            data = (props.filterFn || this.filterBy)(state.filterValue, data, displayProperty) || data
+        if (isArray && this.isStatefulFiltering(props) && (shouldFilter || filterOutSelected)){
+            if (shouldFilter){
+                filteredData = (props.filterFn || this.filterBy)(state.filterValue, data, displayProperty) || data
+            }
+
+            if (filterOutSelected){
+                var selected = props.selected
+                filteredData = filteredData.filter(function(item){
+                    return !(item[idProperty] in selected)
+                }) || data
+            }
+
+            data = filteredData
         }
 
         if (!isArray && typeof data.then === 'function'){
@@ -446,8 +480,16 @@ module.exports = React.createClass({
 
         assign(props, thisProps)
 
+        props.multiSelect = false
+
         //----- prepare tools
         props.tools = props.tools || this.renderTools
+
+        var selected  = this.prepareSelected(props, state)
+
+        if (selected){
+            props.selected = selected
+        }
 
         //----- listProps
         var listProps = props.listProps  = this.prepareListProps(props, state)
@@ -483,17 +525,15 @@ module.exports = React.createClass({
 
         //------ listProps.selected
 
-        var selected  = this.prepareSelected(props, state)
-
         if (selected){
-
-            listProps.selected = props.selected = selected
+            listProps.selected = selected
         }
 
         var selectedId = this.getSelectedId(props, state)
         var selectedIndex
 
-        if (selectedId){
+        if (selectedId != null){
+            props.selectedId = selectedId
             if (props.forceSelect && typeof state.lastSelectedDisplayValue === 'undefined'){
                 selectedIndex = this.getIndexForValue(selectedId, props)
                 this.lastSelectedDisplayValue = this.getDisplayPropertyAt(selectedIndex, props)
@@ -502,7 +542,7 @@ module.exports = React.createClass({
             if (!props.multiSelect){
                 setTimeout(function(){
                     this.scrollToRowById(selectedId)
-                }.bind(this))
+                }.bind(this), 0)
             }
         }
 
@@ -759,7 +799,7 @@ module.exports = React.createClass({
             this.onSelect(props, text, selectedId, item, index)
         }
 
-        this.doFilter(filterValue)
+        this.doFilter(filterValue, props)
     },
 
     onChange: function(props, text, value, info){
@@ -784,7 +824,7 @@ module.exports = React.createClass({
         }
     },
 
-    doFilter: function(filterValue){
+    doFilter: function(filterValue, props){
         if (this.state.filterValue !== filterValue){
             this.setState({
                 filterValue: filterValue
@@ -821,7 +861,7 @@ module.exports = React.createClass({
         }
     },
 
-    onArrowNavigation: function(props, dir){
+    onArrowNavigation: buffer(function(props, dir){
 
         this.setListVisible(true)
 
@@ -859,9 +899,9 @@ module.exports = React.createClass({
         }
 
         if (!listVisible){
-            this.doFilter(null)
+            this.doFilter(null, props)
         }
-    },
+    }, 10),
 
     handleArrowMouseOver: function(){
         if (this.props.disabled){
@@ -900,11 +940,12 @@ module.exports = React.createClass({
     },
 
     handleListRowMouseDown: function(props, item, index, listProps, event) {
+        event.preventDefault()
+
         if (props.multiSelect){
             return
         }
 
-        event.preventDefault()
         this.confirm(props, index)
     },
 
@@ -937,7 +978,7 @@ module.exports = React.createClass({
     },
 
     setListVisible: function(value){
-        value = true
+
         if (value != this.isListVisible()){
             this.setState({
                 listVisible: value
@@ -991,10 +1032,10 @@ module.exports = React.createClass({
         this.notify(id)
     },
 
-    handleFocus: function(event){
+    handleFocus: function(props, event){
         if (this.props.showListOnFocus && !this.props.dd){
             this.setListVisible(true)
-            this.doFilter(null)
+            this.doFilter(null, props)
         }
 
         var fieldProps = this.props.fieldProps
@@ -1018,7 +1059,7 @@ module.exports = React.createClass({
             var id    = state.lastSelectedId
             var value = this.getValue(props, state)
 
-            if (id !== value){
+            if (id !== value && id != null){
                 this.selectId(id)
             }
         }

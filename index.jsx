@@ -51,14 +51,14 @@ var initialData = gen(LEN)
 var data = initialData.concat()
 
 function log(){
-    console.log(arguments)
+    // console.log(arguments)
 }
 
 var App = React.createClass({
 
     onChange: function(text, value, info){
         VALUE = value
-        console.log('TEXT:', text, ', VALUE:',value)
+        // console.log('TEXT:', text, ', VALUE:',value)
         // VALUE.display = text
         // VALUE.id = value
 
@@ -77,7 +77,7 @@ var App = React.createClass({
     },
 
     onSelect: function(text, value, item) {
-        console.log('select', text, value)
+        // console.log('select', text, value)
         // VALUE = {
 
         // }
@@ -150,7 +150,7 @@ var App = React.createClass({
             console.log('clicked', e.target)
         }
 
-        console.log(v)
+        // console.log(v)
 
         return (
             <div>
@@ -168,9 +168,10 @@ var App = React.createClass({
                     displayProperty ='firstName'
                     data            ={data}
                     readOnly       ={false}
-                    forceSelect     ={false}
+                    forceSelect     ={true}
                     defaultSelected={selected}
-                    multiSelect     ={true}
+                    xmultiSelect     ={true}
+                    xfilterOutSelected={true}
                     updateOnNavigate={true}
                     placeholder     ="test"
                     value    ={v}

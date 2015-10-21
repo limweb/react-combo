@@ -58,10 +58,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var React  = __webpack_require__(1)
 	var assign = __webpack_require__(7)
-	var prefixer = __webpack_require__(9)
-	var Field  = __webpack_require__(10)
+	var prefixer = __webpack_require__(10)
+	var Field  = __webpack_require__(11)
+	var TagField  = __webpack_require__(13)
 
-	var ListView        = __webpack_require__(11)
+	var EVENT_NAMES = __webpack_require__(8)
+
+	var ListView        = __webpack_require__(12)
 	var ListViewFactory = React.createFactory(ListView)
 
 	var arrowStyle   = __webpack_require__(2)
@@ -76,7 +79,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    React.PropTypes.number
 	])
 
-	var Utils = __webpack_require__(8)
+	var Utils = __webpack_require__(9)
 
 	module.exports = React.createClass({
 
@@ -134,13 +137,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 
-	        onSelect: React.PropTypes.func,
-	        onChange: React.PropTypes.func,
-	        onFilter: React.PropTypes.func,
-	        validate: React.PropTypes.func,
+	        onSelect  : React.PropTypes.func,
+	        onChange  : React.PropTypes.func,
+	        onFilter  : React.PropTypes.func,
+	        onShowList: React.PropTypes.func,
+	        validate  : React.PropTypes.func,
 
 	        listFactory  : React.PropTypes.func,
-	        onShowList   : React.PropTypes.func,
 	        renderList   : React.PropTypes.func,
 	        constrainList: React.PropTypes.func
 	    },
@@ -150,6 +153,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    getInitialState: function(){
 	        return {
 	            listVisible             : false,
+	            defaultSelected         : this.props.defaultSelected,
 	            selectedId              : undefined,
 	            lastSelectedId          : undefined,
 	            lastSelectedDisplayValue: undefined,
@@ -161,9 +165,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return {
 	            defaultStyle: {
 	                position: 'relative',
-	                display: 'inline-block'
+	                display: 'inline-block',
+	                boxSizing: 'border-box'
 	            },
 	            defaultFieldStyle: {
+	                overflow: 'visible',
 	                width: '100%',
 	                position: 'relative'
 	            },
@@ -174,6 +180,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            dropDownInputStyle: {
 	                background: 'white'
 	            },
+	            defaultFieldProps: {
+	                selectableTags: true
+	            },
 	            arrowColor: '#a8a8a8',
 	            arrowOverColor: '#7F7C7C',
 	            arrowWidth: 5,
@@ -182,6 +191,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            showListOnFocus  : true,
 	            stateful: true,
 	            loading : false,
+	            multiSelect: false,
 	            listPosition: 'bottom',
 	            hiddenName: '',
 	            constrainTo: true,
@@ -218,9 +228,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            React.createElement("input", {type: "hidden", value: this.getValue(props, state), name: props.hiddenName}):
 	                            null
 
+	        var FieldFactory = props.multiSelect?
+	                            TagField:
+	                            Field
 	        return React.createElement("div", React.__spread({},  this.prepareWrapperProps(props, state)), 
 	            hiddenField, 
-	            React.createElement(Field, React.__spread({},  props.fieldProps), 
+	            React.createElement(FieldFactory, React.__spread({},  props.fieldProps), 
 	                list
 	            )
 
@@ -230,6 +243,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    renderList: function(props, state){
 	        var listProps = props.listProps
 	        var visible   = state.listVisible
+
+	        listProps.visible = visible
 
 	        if (!visible){
 	            listProps.style.display = 'none'
@@ -252,7 +267,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return list
 	    },
 
+	    setSelected: function(props, selectedMap){
+
+	        if (this.props.selected == null){
+	            this.setState({
+	                defaultSelected: selectedMap
+	            })
+	        }
+
+	        var listProps = this.props.listProps || {}
+
+	        ;(listProps.onSelectionChange || emptyFn)(selectedMap)
+	        ;(this.props.onSelectionChange || emptyFn)(selectedMap)
+
+	    },
+
 	    getSelectedId: function(props, state){
+	        if (props.multiSelect){
+	            var selected = props.selected == null?
+	                            state.defaultSelected:
+	                            props.selected
+
+	            if (selected && typeof selected == 'object'){
+	                return Object.keys(selected)[0]
+	            }
+	        }
+
 	        return state.selectedId === undefined?
 	                                props.selectedId:
 	                                state.selectedId
@@ -260,8 +300,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    prepareSelected: function(props, state) {
-	        var selectedId = this.getSelectedId(props, state)
+
 	        var selected
+	        if (props.multiSelect){
+	            selected = props.selected == null?
+	                        state.defaultSelected:
+	                        props.selected
+
+	            if (selected && typeof selected == 'object'){
+	                return selected
+	            }
+	        }
+
+	        var selectedId = this.getSelectedId(props, state)
 
 	        if (selectedId !== undefined){
 
@@ -282,7 +333,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        listProps.loading         = typeof listProps.loading != 'undefined'? listProps.loading: props.loading
 	        listProps.idProperty      = idProperty
 	        listProps.displayProperty = displayProperty
-	        listProps.onRowMouseDown  = this.handleListRowMouseDown.bind(this, props)
+
+	        listProps.onRowMouseDown    = this.handleListRowMouseDown.bind(this, props)
+	        listProps.onSelectionChange = this.handleListSelectionChange.bind(this, props)
 
 	        listProps.style = assign({}, props.defaultListStyle, props.listStyle, listProps.style)
 
@@ -321,7 +374,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        delete fieldProps.defaultStyle
 	        delete fieldProps.readOnly
 
-	        assign(fieldProps, props.fieldProps)
+	        assign(fieldProps, props.defaultFieldProps, props.fieldProps)
 
 	        var ddStyle
 	        if (props.dd){
@@ -329,8 +382,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            ddStyle = props.dropDownInputStyle
 	        }
 
+	        fieldProps.inputProps = assign({}, fieldProps.inputProps)
+	        fieldProps.inputProps.size = null
+	        fieldProps.inputProps.style = assign({}, fieldProps.inputProps.style, { flex: 1 })
+
 	        if (props.readOnly){
-	            fieldProps.inputProps = assign({}, fieldProps.inputProps)
 	            fieldProps.inputProps.style = assign({
 	                cursor: 'pointer'
 	            }, ddStyle, fieldProps.inputProps.style)
@@ -352,6 +408,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        fieldProps.onBlur    = this.handleBlur
 	        fieldProps.onKeyDown = this.handleKeyDown.bind(this, props)
 	        fieldProps.onChange  = this.handleChange.bind(this, props)
+
+	        if (props.multiSelect){
+	            fieldProps.onChangeTags = this.handleChangeTags.bind(this, props)
+	        }
 
 	        delete fieldProps.data
 
@@ -403,6 +463,40 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return theValue
 	    },
 
+	    prepareTagInfo: function(props, state){
+
+	        var listProps = props.listProps
+	        var displayProperty = listProps.displayProperty
+	        var idProperty = listProps.idProperty
+
+	        var selected = props.selected
+	        var info = []
+
+	        if (selected){
+	            Object.keys(selected).forEach(function(key){
+	                var item = selected[key]
+
+	                if (item){
+	                    info.push({
+	                        id: item[idProperty],
+	                        item: item,
+	                        text: item[displayProperty]
+	                    })
+	                }
+	            })
+	        }
+
+	        return info
+	    },
+
+	    prepareTags: function(props, state){
+	        props.tagInfo = this.prepareTagInfo(props, state)
+
+	        return props.tagInfo.map(function(info){
+	            return info.text
+	        })
+	    },
+
 	    prepareProps: function(thisProps, state){
 	        var props = {}
 
@@ -444,10 +538,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        props.selectedId = this.getIdPropertyAt(index, props)
 
 	        //------ listProps.selected
+
 	        var selected  = this.prepareSelected(props, state)
 
 	        if (selected){
-	            listProps.selected = selected
+
+	            listProps.selected = props.selected = selected
 	        }
 
 	        var selectedId = this.getSelectedId(props, state)
@@ -459,12 +555,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.lastSelectedDisplayValue = this.getDisplayPropertyAt(selectedIndex, props)
 	            }
 
-	            setTimeout(function(){
-	                this.scrollToRowById(selectedId)
-	            }.bind(this))
+	            if (!props.multiSelect){
+	                setTimeout(function(){
+	                    this.scrollToRowById(selectedId)
+	                }.bind(this))
+	            }
 	        }
 
 	        fieldProps.value = displayValue
+
+	        if (props.multiSelect){
+	            fieldProps.tags = this.prepareTags(props, state)
+	        }
 
 	        props.displayValue = displayValue
 
@@ -585,15 +687,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    renderComboTool: function(props){
 
-	        var disabled = props.disabled
+	        var disabled     = props.disabled
 	        var state        = this.state
-	        var arrowProps   = assign(props)
+	        var arrowProps   = assign({}, props)
 	        var arrowPadding = props.arrowPadding
 
 	        var style = {
-	            padding : '0px ' + arrowPadding + 'px',
-	            position: 'relative',
-	            display : 'flex',
+	            padding   : '0px ' + arrowPadding + 'px',
+	            position  : 'relative',
+	            display   : 'flex',
 	            flexFlow  : 'row',
 	            alignItems: 'center'
 	        }
@@ -611,14 +713,47 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var comboArrowStyle = arrowStyle('down', arrowProps)
 
-	        return React.createElement("div", {style: prefixer(style), 
-	                className: className, 
-	                onMouseOut: this.handleArrowMouseOut, 
-	                onMouseOver: this.handleArrowMouseOver, 
-	                onClick: this.handleArrowClick, 
-	                onMouseDown: this.handleArrowMouseDown}, 
+	        var events = {
+	            onMouseOut: this.handleArrowMouseOut,
+	            onMouseOver: this.handleArrowMouseOver,
+	        }
+
+	        events[EVENT_NAMES.onClick]     = this.handleArrowClick
+	        events[EVENT_NAMES.onMouseDown] = this.handleArrowMouseDown
+
+	        return React.createElement("div", React.__spread({style: prefixer(style), 
+	                key: "comboTool", 
+	                ref: "comboTool", 
+	                className: className}, 
+	                events
+	            ), 
 	            React.createElement("div", {className: "combo-arrow", style: comboArrowStyle})
 	        )
+	    },
+
+	    handleChangeTags: function(props, tags){
+	        var selected = props.selected
+	        var newSelected = {}
+	        var displayProperty = props.listProps.displayProperty
+
+	        var tagInfo = props.tagInfo
+
+	        tags.forEach(function(text){
+
+	            var index = findIndexBy(function(item){
+	                return item.text === text
+	            }, tagInfo)
+
+	            var id
+
+	            if (~index){
+	                id = tagInfo[index].id
+	                newSelected[id] = selected[id]
+	            }
+	        })
+
+	        this.setSelected(props, newSelected)
+
 	    },
 
 	    handleChange: function(props, value, inputProps, event){
@@ -736,7 +871,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            this.selectId(id)
 
-	            this.setListVisible(false)
+	            if (!props.multiSelect){
+	                this.setListVisible(false)
+	            }
 	        }
 	    },
 
@@ -802,11 +939,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    handleArrowClick: function(){
-	        this.toggleList()
 	    },
 
 	    handleArrowMouseDown: function(event){
 	        event.preventDefault()
+	        this.toggleList()
 	    },
 
 	    handleKeyDown: function(props, event){
@@ -819,9 +956,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    handleListRowMouseDown: function(props, item, index, listProps, event) {
-	        event.preventDefault()
+	        if (props.multiSelect){
+	            return
+	        }
 
+	        event.preventDefault()
 	        this.confirm(props, index)
+	    },
+
+	    handleListSelectionChange: function(props, selectedMap){
+	        if (!props.multiSelect){
+	            return
+	        }
+
+	        this.setSelected(props, selectedMap)
 	    },
 
 	    handleEnterKeyDown: function(props, event){
@@ -845,6 +993,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    setListVisible: function(value){
+	        value = true
 	        if (value != this.isListVisible()){
 	            this.setState({
 	                listVisible: value
@@ -1031,7 +1180,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	module.exports = {
-	    constrainList: __webpack_require__(12)
+	    constrainList: __webpack_require__(14)
 	}
 
 /***/ },
@@ -1072,14 +1221,32 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	module.exports = __webpack_require__(21)?
+		{
+			onMouseDown: 'onTouchStart',
+			onMouseUp  : 'onTouchEnd',
+			onMouseMove: 'onTouchMove'
+		}:
+		{
+			onMouseDown: 'onMouseDown',
+			onMouseUp  : 'onMouseUp',
+			onMouseMove: 'onMouseMove'
+		}
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var assign = __webpack_require__(7)
 
 	var hasOwn = function(obj, prop){
 	    return Object.prototype.hasOwnProperty.call(obj, prop)
 	}
 
-	var toUpperFirst = __webpack_require__(13)
-	var constrainPicker = __webpack_require__(14)
+	var toUpperFirst = __webpack_require__(15)
+	var constrainPicker = __webpack_require__(16)
 
 	function emptyFn(){}
 
@@ -1144,6 +1311,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        pickerProps.style = assign({}, props.defaultPickerStyle, props.pickerStyle, pickerProps.style)
 
 	        pickerProps.ref = "picker"
+	        pickerProps.owner = this
 
 	        return pickerProps
 	    },
@@ -1153,6 +1321,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _renderPicker: function(props, state){
 	        var pickerProps = props.pickerProps
 	        var visible     = state.pickerVisible
+
+	        pickerProps.visible = visible
 
 	        if (!visible){
 	            pickerProps.style.display = 'none'
@@ -1200,95 +1370,83 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+	'use strict';
 
-	var el;
+	var hasOwn      = __webpack_require__(17)
+	var getPrefixed = __webpack_require__(18)
 
-	if(!!global.document){
-	  el = global.document.createElement('div');
+	var map      = __webpack_require__(19)
+	var plugable = __webpack_require__(20)
+
+	function plugins(key, value){
+
+		var result = {
+			key  : key,
+			value: value
+		}
+
+		;(RESULT.plugins || []).forEach(function(fn){
+
+			var tmp = map(function(res){
+				return fn(key, value, res)
+			}, result)
+
+			if (tmp){
+				result = tmp
+			}
+		})
+
+		return result
 	}
 
-	var prefixes = ["ms", "Moz", "Webkit", "O"];
-	var properties = [
-	  'userSelect',
-	  'transform',
-	  'transition',
-	  'transformOrigin',
-	  'transformStyle',
-	  'transitionProperty',
-	  'transitionDuration',
-	  'transitionTimingFunction',
-	  'transitionDelay',
-	  'borderImage',
-	  'borderImageSlice',
-	  'boxShadow',
-	  'backgroundClip',
-	  'backfaceVisibility',
-	  'perspective',
-	  'perspectiveOrigin',
-	  'animation',
-	  'animationDuration',
-	  'animationName',
-	  'animationDelay',
-	  'animationDirection',
-	  'animationIterationCount',
-	  'animationTimingFunction',
-	  'animationPlayState',
-	  'animationFillMode',
-	  'appearance'
-	];
+	function normalize(key, value){
 
-	function GetVendorPrefix(property) {
-	  if(properties.indexOf(property) == -1 || !global.document || typeof el.style[property] !== 'undefined'){
-	    return property;
-	  }
+		var result = plugins(key, value)
 
-	  property = property[0].toUpperCase() + property.slice(1);
-	  var temp;
+		return map(function(result){
+			return {
+				key  : getPrefixed(result.key, result.value),
+				value: result.value
+			}
+		}, result)
 
-	  for(var i = 0; i < prefixes.length; i++){
-	    temp = prefixes[i] + property;
-	    if(typeof el.style[temp] !== 'undefined'){
-	      prefixes = [prefixes[i]]; // we only need to check this one prefix from now on.
-	      return temp;
-	    }
-	  }
-	  return property[0].toLowerCase() + property.slice(1);
+		return result
 	}
 
+	var RESULT = function(style){
+		var k
+		var item
+		var result = {}
 
-	module.exports = (function(){
-	  var cache = {};
-	  return function(obj){
-	    if(!global.document){
-	      return obj;
-	    }
+		for (k in style) if (hasOwn(style, k)){
+			item = normalize(k, style[k])
 
-	    var result = {};
+			if (!item){
+				continue
+			}
 
-	    for(var key in obj){
-	      if(cache[key] === undefined){
-	        cache[key] = GetVendorPrefix(key);
-	      }
-	      result[cache[key]] = obj[key];
-	    }
+			map(function(item){
+				result[item.key] = item.value
+			}, item)
+		}
 
-	    return result;
-	  };
-	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+		return result
+	}
+
+	module.exports = plugable(RESULT)
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/** @jsx React.DOM */'use strict';
 
-	var assign = __webpack_require__(23)
+	var assign = __webpack_require__(40)
 	var React  = __webpack_require__(1)
+	var normalize = __webpack_require__(41)
 
 	function emptyFn() {}
 
@@ -1321,6 +1479,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    getDefaultProps: function () {
 	        return {
 	            focusOnClick: true,
+	            stopChangePropagation: true,
+	            stopSelectPropagation: true,
 
 	            defaultClearToolStyle: {
 	                fontSize   : 20,
@@ -1342,6 +1502,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 
 	            defaultInnerStyle: {
+	                userSelect: 'none',
 	                width     : '100%',
 	                display   : 'inline-flex',
 	                flexFlow  : 'row',
@@ -1403,7 +1564,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        delete divProps.value
 	        delete divProps.placeholder
 
-	        return React.createElement("div", React.__spread({},  divProps), 
+	        return React.createElement("div", React.__spread({},  divProps, {'data-display-name': "react-input-field"}), 
 	            React.createElement("div", {style: props.innerStyle}, 
 	                children
 	            )
@@ -1420,6 +1581,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            children.push.apply(children, tools)
 	        } else {
 	            children = (tools || []).concat(field)
+	        }
+
+	        if (typeof props.renderChildren == 'function'){
+	            children = props.renderChildren(children)
 	        }
 
 	        return children
@@ -1497,7 +1662,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return props.isEmpty(props, emptyValue)
 	        }
 
-	        return props.value + '' === emptyValue + ''
+	        var value = props.value
+
+	        if (value == null){
+	            value = ''
+	        }
+
+	        return value === emptyValue
 	    },
 
 	    getEmptyValue: function(props){
@@ -1537,6 +1708,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (this.props.focusOnClick && !this.isFocused()){
 	            this.focus()
 	        }
+
+	        ;(this.props.onClick || emptyFn)(event)
 	    },
 
 	    handleMouseDown: function(event) {
@@ -1549,12 +1722,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    handleChange: function(event) {
-	        event.stopPropagation()
+	        this.props.stopChangePropagation && event.stopPropagation()
 	        this.notify(event.target.value, event)
 	    },
 
 	    handleSelect: function(event) {
-	        event.stopPropagation()
+	        this.props.stopSelectPropagation && event.stopPropagation()
 	        ;(this.props.onSelect || emptyFn)(event)
 	    },
 
@@ -1581,8 +1754,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        props.onClick = this.handleClick
 	        props.onMouseDown = this.handleMouseDown
 
-	        props.className = this.prepareClassName(props)
-	        props.style = this.prepareStyle(props)
+	        props.className  = this.prepareClassName(props)
+	        props.style      = this.prepareStyle(props)
 	        props.innerStyle = this.prepareInnerStyle(props)
 
 	        return props
@@ -1627,7 +1800,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    prepareInnerStyle: function(props) {
 	        var style = assign({}, props.defaultInnerStyle, props.innerStyle)
 
-	        return style
+	        return normalize(style)
 	    },
 
 	    prepareInputProps: function(props) {
@@ -1676,7 +1849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            assign(style, props.defaultInputInvalidStyle, props.inputInvalidStyle)
 	        }
 
-	        return style
+	        return normalize(style)
 	    },
 
 	    prepareClearToolStyle: function(props, state) {
@@ -1720,20 +1893,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = ReactClass
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/** @jsx React.DOM */'use strict'
 
 	var React    = __webpack_require__(1)
-	var LoadMask = __webpack_require__(22)
-	var Title = __webpack_require__(17)
+	var LoadMask = __webpack_require__(36)
+	var Title = __webpack_require__(24)
 	var TitleFactory = React.createFactory(Title)
-	var Row = __webpack_require__(18)
+	var Row = __webpack_require__(25)
 	var RowFactory = React.createFactory(Row)
-	var assign   = __webpack_require__(21)
+	var assign   = __webpack_require__(28)
+	var normalize   = __webpack_require__(37)
 
-	var getSelected   = __webpack_require__(19)
+	var getSelected   = __webpack_require__(26)
 
 	var stringOrNumber = React.PropTypes.oneOfType([
 	    React.PropTypes.number,
@@ -1764,14 +1938,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    displayName: 'ReactListView',
 
 	    mixins: [
-	        __webpack_require__(20)
+	        __webpack_require__(27)
 	    ],
 
 	    propTypes: {
 	        renderText: React.PropTypes.func,
 	        title     : stringOrNumber,
 	        rowHeight : stringOrNumber,
-	        rowStyle  : React.PropTypes.oneOf([
+	        rowStyle  : React.PropTypes.oneOfType([
 	            React.PropTypes.object,
 	            React.PropTypes.func
 	        ]),
@@ -1844,7 +2018,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            rowHeight: null,
 
-	            defaultStyle: {},
+	            defaultStyle: {
+	                display: 'flex',
+	                flexFlow: 'column'
+	            },
 	            defaultListStyle: {}
 	        }
 	    },
@@ -1899,7 +2076,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        assign(style, props.defaultStyle, props.style)
 
-	        return style
+	        return normalize(style)
 	    },
 
 	    prepareClassName: function(props) {
@@ -2106,7 +2283,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        rowProps.onClick = this.handleRowClick.bind(this, item, index, rowProps, props)
 
-
 	        if (typeof this.props.rowStyle == 'function'){
 	            rowProps.style = assign({}, rowProps.style, this.props.rowStyle(item, index, rowProps))
 	        }
@@ -2197,14 +2373,655 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 12 */
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @jsx React.DOM */'use strict';
+
+	var React     = __webpack_require__(1)
+	var Field     = __webpack_require__(38)
+	var assign    = __webpack_require__(32)
+	var normalize = __webpack_require__(39)
+
+	var getSelectionStart = __webpack_require__(29)
+	var getSelectionEnd   = __webpack_require__(30)
+	var setSelectionRange = __webpack_require__(31)
+
+	function emptyFn(){}
+	function preventDefault(event){ event.preventDefault() }
+
+	function insert(target, index, what){
+
+		if (index == -1){
+			return target.concat(what)
+		}
+
+		return target.slice(0, index)
+				.concat(what)
+				.concat(target.slice(index))
+	}
+
+	module.exports = React.createClass({
+
+		displayName: 'ReactTagField',
+
+		getSelectionStart: function() {
+			return getSelectionStart(this.getInput())
+		},
+
+		getSelectionEnd: function() {
+			return getSelectionEnd(this.getInput())
+		},
+
+		setSelectionRange: function(range, input) {
+			var start = range.start
+			var end   = range.end
+
+			setSelectionRange(input || this.getInput(), range)
+		},
+
+		getDefaultProps: function() {
+			return {
+				minInputSize: 3,
+
+				selectedTagStyle: {
+					background: 'rgb(200, 200, 200)'
+				},
+				focusOnClick: true,
+				selectableTags: false,
+
+				clearTool: false,
+				tagOnBlur: false,
+				tagClearTool: false,
+				allowDuplicates: false,
+				editableTags: true,
+				delimiter: ' ',
+
+				tagClearToolColor: '#a8a8a8',
+
+				defaultStyle: {
+					overflow: 'hidden'
+				},
+
+				defaultInputStyle: {
+					flex: 'none',
+					alignSelf: 'center'
+				},
+
+				defaultInnerStyle: {
+				    display   : 'inline-flex',
+				    flexFlow  : 'row wrap'
+				},
+
+				defaultTagStyle: {
+					display     : 'inline-flex',
+					boxSizing: 'border-box',
+					alignItems  : 'center',
+					flex: 'none',
+					flexFlow    : 'row',
+					padding: '6px 2px',
+					marginLeft  : 2,
+					marginTop  : 1,
+					marginBottom  : 1,
+					border      : '1px solid gray',
+					overflow    : 'hidden',
+					whiteSpace  : 'nowrap'
+				},
+
+				defaultTagClearToolStyle: {
+					cursor: 'pointer'
+				},
+
+				validateTag: function(x){
+					return x !== '' && x != null
+				}
+			}
+		},
+
+		getInitialState: function(){
+		    return {
+				defaultValue  : this.props.defaultValue,
+				defaultTags   : this.props.defaultTags,
+				activeTagIndex: -1
+		    }
+		},
+
+		getValue: function() {
+		    var value = this.props.value === undefined?
+		                    this.state.defaultValue:
+		                    this.props.value
+
+		    return value
+		},
+
+		render: function() {
+
+			var props = this.prepareProps(this.props, this.state)
+
+			return React.createElement(Field, React.__spread({ref: "field"},  props, {inputProps: props.inputProps}))
+		},
+
+		getInfoForValue: function(value, propsTags) {
+			value += ''
+
+			var props          = this.props
+			var state          = this.state
+			var activeTagIndex = state.activeTagIndex
+
+			var tags     = value.split(props.delimiter)
+			var newValue = tags[tags.length - 1]
+			var tagMap   = {}
+
+		    if (!props.allowDuplicates){
+		    	propsTags = propsTags || this.prepareTags(this.props)
+
+			    propsTags.forEach(function(tag, index){
+			    	if (index != activeTagIndex){
+				    	tagMap[tag] = true
+				    }
+			    })
+			}
+
+		    tags = tags.slice(0, tags.length - 1).filter(function(x){
+		    	return x && !tagMap[x]
+		    })
+
+		    return {
+				tags : tags,
+				value: newValue
+		    }
+
+		},
+
+		handleClick: function(props, event) {
+
+			if (!event.nativeEvent.tagClick && props.selectableTags){
+				this.setState({
+					activeTagIndex: -1
+				})
+
+				this.focus()
+			}
+
+			if (!props.selectableTags){
+				this.props.focusOnClick && this.focus()
+			}
+
+			;(this.props.onClick || emptyFn)(event)
+		},
+
+		handleBlur: function(props, event) {
+			if (props.tagOnBlur && props.validateTag(props.value)){
+				this.handleChange(props, props.value + props.delimiter, null, event)
+			}
+
+			;(this.props.onBlur || emptyFn)(event)
+		},
+
+		handleChange: function(props, value, inputProps, event){
+			var state   = this.state
+			var info    = this.getInfoForValue(value, props.tags)
+			var newTags = info.tags
+
+			var allTags = props.editableTags?
+							insert(props.tags, state.activeTagIndex, newTags):
+							[].concat(props.tags).concat(newTags)
+
+			if (newTags.length && state.activeTagIndex != -1 && props.editableTags){
+				this.setState({
+					activeTagIndex: state.activeTagIndex + 1
+				})
+			}
+
+			this.notifyChange(props, info.value, allTags, event)
+		},
+
+		notifyChange: function(props, newValue, allTags, event) {
+
+			var newState = {}
+
+	    	;(this.props.onChangeTags || emptyFn)(allTags)
+
+	    	if (this.props.tags == null){
+	    	    newState.defaultTags = allTags
+	    	}
+
+		    if (this.props.value == null){
+		    	newState.defaultValue = newValue
+		    }
+
+		    this.setState(newState)
+
+		    ;(this.props.onChange || emptyFn)(newValue, this.props, event)
+		},
+
+		handleKeyDown: function(props, event) {
+
+			var key = event.key
+
+			if (this.props.onKeyDown){
+				this.props.onKeyDown(event)
+			}
+
+			if (!props.tags.length){
+				return
+			}
+
+			if (key != 'Backspace' && key != 'ArrowLeft' && key != 'ArrowRight' && key != 'Delete'){
+				return
+			}
+
+			var value = props.value + ''
+			var index = this.state.activeTagIndex
+			var tags  = props.tags
+
+			var textToLeft
+			var textToRight
+
+			var selectionStart = this.getSelectionStart()
+			var selectionEnd   = this.getSelectionEnd()
+
+			if (selectionStart < selectionEnd){
+				return
+			}
+
+			if (key == 'ArrowLeft' || key == 'Backspace'){
+				textToLeft = value.substring(0, selectionStart)
+			}
+
+			if (key == 'ArrowRight' || key == 'Delete'){
+				textToRight = value.substring(selectionEnd)
+			}
+
+			if ((key == 'Backspace' || key == 'ArrowLeft') && textToLeft === ''){
+
+				//if there is no other character at the left of the cursor,
+				//go to the tag before the cursor
+
+				if (index == -1){
+					index = tags.length
+				}
+
+				index--
+
+				if (index >= 0){
+					if (props.selectableTags){
+						this.focusHidden()
+					}
+					this.setActiveTagIndex(props, index)
+					event.preventDefault()
+				}
+			}
+
+			if ((key == 'ArrowRight' || key == 'Delete') && textToRight == '' && tags[index]){
+				event.preventDefault()
+				this.setActiveTagIndex(props, index, function(){
+					this.setSelectionRange({start: 0, end: 0})
+				}.bind(this))
+			}
+		},
+
+		removeTag: function(props, index) {
+			var allTags = this.tags.filter(function(tag, i){
+				return i !== index
+			})
+
+			var activeTagIndex = this.state.activeTagIndex
+			if (activeTagIndex != -1 && activeTagIndex > index){
+				//an item was removed from before the editing tag
+				//so bring the editing index one down
+				this.setState({
+					activeTagIndex: activeTagIndex - 1
+				})
+			}
+
+			this.notifyChange(props, props.value, allTags)
+		},
+
+		setActiveTagIndex: function(props, index, callback) {
+			var currentValue     = props.value
+			var shouldAddCurrent = props.validateTag(currentValue)
+
+			var state   = this.state
+			var value
+
+			var allTags = []
+			var tags    = this.tags
+			var i       = 0
+			var len     = tags.length
+
+			var activeTagIndex = state.activeTagIndex
+			var tag
+
+			if (props.editableTags){
+
+				var addCurrentValue
+				var addCurrentTag
+
+				for (; i < len; i++){
+					tag = tags[i]
+
+					addCurrentValue = i == activeTagIndex
+					addCurrentTag   = i != index
+
+					if (addCurrentValue){
+						shouldAddCurrent && allTags.push(currentValue)
+					}
+					if (addCurrentTag){
+						allTags.push(tag)
+					} else {
+						value = tag
+					}
+				}
+
+				if (activeTagIndex == -1){
+					shouldAddCurrent && allTags.push(currentValue)
+				} else {
+					if (shouldAddCurrent && index >= activeTagIndex){
+						//the current value was added
+						index++
+					}
+				}
+			} else {
+				allTags = tags
+				value = currentValue
+			}
+
+			if (index >= allTags.length){
+				index = -1
+			}
+			if (index < 0){
+				index = -1
+			}
+
+			this.setState({
+				activeTagIndex: index
+			}, callback || emptyFn)
+
+			this.notifyChange(props, value, allTags)
+		},
+
+		prepareProps: function(thisProps, state) {
+			var props = assign({}, thisProps)
+
+			if (props.selectableTags){
+				props.editableTags = false
+			}
+
+			this.prepareStyles(props, state)
+
+			props.tagStyle       = this.prepareTagStyle(props, state)
+			props.tags           = this.tags = this.prepareTags(props)
+			props.value          = this.prepareValue(props, state)
+			props.inputProps = this.prepareInputProps(props)
+			props.renderChildren = this.renderChildren.bind(this, props)
+
+			props.onChange  = this.handleChange.bind(this, props)
+			props.onBlur    = this.handleBlur.bind(this, props)
+			props.onKeyDown = this.handleKeyDown.bind(this, props)
+			props.onClick   = this.handleClick.bind(this, props)
+
+			props.focusOnClick = false
+
+			return props
+		},
+
+		prepareInputProps: function(props){
+			var inputProps = assign({}, props.defaultInputProps, props.inputProps)
+
+			var inputSize = inputProps.size
+
+			if (inputSize === undefined){
+				inputProps.size = Math.max(props.value? props.value.length: 0, this.props.minInputSize)
+			}
+
+			return inputProps
+		},
+
+		prepareStyles: function(props, state) {
+			props.style = this.prepareStyle(props, state)
+			props.innerStyle = assign({}, props.defaultInnerStyle, props.innerStyle)
+			props.inputStyle = assign({}, props.defaultInputStyle, props.inputStyle)
+
+			props.tagClearToolStyle = this.prepareTagClearToolStyle(props, state)
+
+
+			delete props.defaultStyle
+			delete props.defaultInnerStyle
+			delete props.defaultInputStyle
+		},
+
+		prepareTagClearToolStyle: function(props, state) {
+			var style = assign({}, props.defaultTagClearToolStyle, {
+				color: props.tagClearToolColor
+			}, props.tagClearToolStyle)
+
+			return style
+		},
+
+		prepareStyle: function(props) {
+			var style = assign({}, props.defaultStyle, props.style)
+
+			return style
+		},
+
+		prepareValue: function(props, state) {
+		    return this.getValue()
+		},
+
+		prepareTags: function(props) {
+			var tags  = props.tags
+			var state = this.state
+
+			if (tags == null){
+				tags = state.defaultTags
+			}
+
+			tags = Array.isArray(tags) && tags.length? [].concat(tags): []
+
+			return tags.filter(props.validateTag)
+		},
+
+		prepareTagStyle: function(props, state) {
+			return assign({}, props.defaultTagStyle, props.tagStyle)
+		},
+
+		renderChildren: function(props, children) {
+			var result = children
+			var state = this.state
+
+			var tags = props.tags
+
+			if (tags.length){
+				tags = tags.map(function(tag, index){
+					return this.renderTag(props, tag, index)
+				}, this)
+
+				if (state.activeTagIndex == -1 || !props.editableTags){
+					result = tags.concat(children)
+				} else {
+					result = tags.slice(0, state.activeTagIndex)
+								.concat(children)
+								.concat(tags.slice(state.activeTagIndex))
+				}
+			}
+
+			result.push(this.renderHiddenField(props))
+
+			return result
+		},
+
+		renderHiddenField: function(props) {
+			if (props.editableTags){
+				return
+			}
+
+			return React.createElement("input", {
+				key: "hiddenFocusField", 
+				type: "text", 
+				ref: "hiddenFocusField", 
+				onFocus: this.onHiddenFocus, 
+				onKeyDown: this.onHiddenKeyDown.bind(this, props), 
+				style: {
+					opacity: 0,
+					width: 0,
+					height: 0,
+					margin: 0,
+					boxSizing: 'border-box',
+					border: 0
+					// visibility: 'hidden'
+				}}
+			)
+		},
+
+		onHiddenKeyDown: function(props, event){
+
+			event.preventDefault()
+			event.stopPropagation()
+
+			var tags = this.tags
+			var len = tags.length
+			var activeTagIndex = this.state.activeTagIndex
+
+			if (!len){
+				return
+			}
+
+			var key = event.key
+
+			var dir
+
+			if (key == 'ArrowLeft'){
+				dir = -1
+			}
+			if (key == 'ArrowRight'){
+				dir = 1
+			}
+
+			var newIndex
+
+			if (dir){
+				newIndex = activeTagIndex + dir
+
+				if (newIndex < 0){
+					newIndex = len - 1
+				}
+
+				if (newIndex >= len){
+					newIndex = 0
+				}
+				this.setActiveTagIndex(props, newIndex)
+
+			} else {
+
+				if (key == 'Delete' || key == 'Backspace'){
+					this.removeTag(props, activeTagIndex)
+
+					if (key == 'Backspace' || activeTagIndex === len - 1){
+						newIndex = activeTagIndex - 1
+						if (newIndex < 0){
+							newIndex = 0
+						}
+						setTimeout(function(){
+							this.setActiveTagIndex(props, newIndex)
+						}.bind(this), 0)
+					}
+
+					if (len == 1){
+						this.focus()
+					}
+				}
+
+				if (key == 'Escape'){
+					this.setActiveTagIndex(props, -1)
+					this.focus()
+					return
+				}
+			}
+		},
+
+		focusHidden: function() {
+			this.getFocusField().getDOMNode().focus()
+		},
+
+		getFocusField: function(){
+			return this.refs.field.refs.hiddenFocusField
+		},
+
+		renderTag: function(props, tag, index) {
+			var state = this.state
+			var tool
+			var tagClearTool = props.tagClearTool
+
+			if (tagClearTool){
+				if (typeof tagClearTool == 'function'){
+					tool = tagClearTool()
+				} else {
+					tool = React.createElement("span", {style: props.tagClearToolStyle, onClick: this.onTagClearClick.bind(this, props, tag, index)}, "✖")
+				}
+			}
+
+			var tagStyle = props.tagStyle
+			var selectedIndex = state.activeTagIndex
+
+			if (props.selectableTags && index == selectedIndex){
+				tagStyle = assign({}, tagStyle, props.selectedTagStyle)
+			}
+
+			return React.createElement("span", {key: index, style: tagStyle, onMouseDown: preventDefault, onClick: this.onTagClick.bind(this, props, tag, index)}, 
+				tag, 
+				tool
+			)
+		},
+
+		onTagClick: function(props, tag, index, event) {
+			if (event.nativeEvent.clearTag){
+				return
+			}
+
+			if (props.selectableTags){
+				this.focusHidden()
+				// return
+			}
+
+			event.nativeEvent.tagClick = true
+
+			this.setActiveTagIndex(props, index)
+		},
+
+		onTagClearClick: function(props, tag, index, event){
+			event.nativeEvent.clearTag = true
+			this.removeTag(props, index)
+		},
+
+		notify: function(value, event) {
+		    var field = this.refs.field
+
+		    field.notify(value, event)
+		},
+
+		getInput: function(value, event) {
+		    return this.refs.field.getInput()
+		},
+
+		focus: function(value, event) {
+		    this.refs.field.focus()
+		},
+
+		isFocused: function(value, event) {
+		    return this.refs.field.isFocused()
+		}
+	})
+
+/***/ },
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Region = __webpack_require__(15)
+	var Region = __webpack_require__(22)
 	var assign = __webpack_require__(7)
-	var selectParent = __webpack_require__(16)
+	var selectParent = __webpack_require__(23)
 
 	module.exports = function(props, listProps, constrainTo){
 	    var constrainRegion
@@ -2256,7 +3073,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 13 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
@@ -2270,14 +3087,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 14 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Region = __webpack_require__(15)
+	var Region = __webpack_require__(22)
 	var assign = __webpack_require__(7)
-	var selectParent = __webpack_require__(16)
+	var selectParent = __webpack_require__(23)
 
 	module.exports = function(props, pickerProps, constrainTo){
 	    var constrainRegion
@@ -2326,19 +3143,112 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 15 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(26)
-
-/***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var curry   = __webpack_require__(24)
-	var matches = __webpack_require__(25)
+	module.exports = function(obj, prop){
+		return Object.prototype.hasOwnProperty.call(obj, prop)
+	}
+
+
+/***/ },
+/* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getStylePrefixed = __webpack_require__(33)
+	var properties       = __webpack_require__(34)
+
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		return getStylePrefixed(key, value)
+	}
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(fn, item){
+
+		if (!item){
+			return
+		}
+
+		if (Array.isArray(item)){
+			return item.map(fn).filter(function(x){
+				return !!x
+			})
+		} else {
+			return fn(item)
+		}
+	}
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getCssPrefixedValue = __webpack_require__(35)
+
+	module.exports = function(target){
+		target.plugins = target.plugins || [
+			(function(){
+				var values = {
+					'flex':1,
+					'inline-flex':1
+				}
+
+				return function(key, value){
+					if (key === 'display' && value in values){
+						return {
+							key  : key,
+							value: getCssPrefixedValue(key, value)
+						}
+					}
+				}
+			})()
+		]
+
+		target.plugin = function(fn){
+			target.plugins = target.plugins || []
+
+			target.plugins.push(fn)
+		}
+
+		return target
+	}
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {module.exports = 'ontouchstart' in global || (global.DocumentTouch && document instanceof DocumentTouch)
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(48)
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var curry   = __webpack_require__(42)
+	var matches = __webpack_require__(43)
 
 	module.exports = curry(function(selector, node){
 	    while (node = node.parentElement){
@@ -2349,13 +3259,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 17 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/** @jsx React.DOM */'use strict';
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(21)
+	var assign = __webpack_require__(28)
 
 	module.exports = React.createClass({
 
@@ -2383,14 +3293,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 18 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/** @jsx React.DOM */'use strict'
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(21)
-	var prefixer = __webpack_require__(28)
+	var assign = __webpack_require__(28)
+	var prefixer = __webpack_require__(37)
 
 	module.exports = React.createClass({
 
@@ -2462,7 +3372,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 19 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2477,13 +3387,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 20 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var assign = __webpack_require__(21)
-	var getSelected = __webpack_require__(19)
+	var assign = __webpack_require__(28)
+	var getSelected = __webpack_require__(26)
 
 	var hasOwn = function(obj, prop){
 	    return Object.prototype.hasOwnProperty.call(obj, prop)
@@ -2713,7 +3623,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 21 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2745,14 +3655,238 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 22 */
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+
+	var document = global.document
+
+	//from http://javascript.nwbox.com/cursor_position/, but added the !window.getSelection check, which
+	//is needed for newer versions of IE, which adhere to standards
+	module.exports = function getSelectionStart(o) {
+	    if (o.createTextRange && !window.getSelection) {
+	        var r = document.selection.createRange().duplicate()
+	        r.moveEnd('character', o.value.length)
+	        if (r.text == '') return o.value.length
+	        return o.value.lastIndexOf(r.text)
+	    } else return o.selectionStart
+	}
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+
+	var document = global.document
+
+	module.exports = function getSelectionEnd(o) {
+	    if (o.createTextRange && !window.getSelection) {
+	        var r = document.selection.createRange().duplicate()
+	        r.moveStart('character', -o.value.length)
+	        return r.text.length
+	    } else return o.selectionEnd
+	}
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+
+	var document = global.document
+
+	module.exports = function(o, range) {
+		var start = range.start
+		var end = range.end
+
+		if (o.setSelectionRange == 'function'){
+			o.setSelectionRange(start, end )
+		} else {
+	    	o.selectionStart = start
+	    	o.selectionEnd = end
+	    }
+	}
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	function ToObject(val) {
+		if (val == null) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
+
+		return Object(val);
+	}
+
+	module.exports = Object.assign || function (target, source) {
+		var from;
+		var keys;
+		var to = ToObject(target);
+
+		for (var s = 1; s < arguments.length; s++) {
+			from = arguments[s];
+			keys = Object.keys(Object(from));
+
+			for (var i = 0; i < keys.length; i++) {
+				to[keys[i]] = from[keys[i]];
+			}
+		}
+
+		return to;
+	};
+
+
+/***/ },
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(44)
+	var getPrefix    = __webpack_require__(45)
+	var el           = __webpack_require__(46)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key// + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+
+	    if (!(key in STYLE)){//we have to prefix
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = prefix + toUpperFirst(key)
+
+	            if (prefixed in STYLE){
+	                key = prefixed
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = key
+
+	    return key
+	}
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = {
+	  'alignItems': 1,
+	  'justifyContent': 1,
+	  'flex': 1,
+	  'flexFlow': 1,
+
+	  'userSelect': 1,
+	  'transform': 1,
+	  'transition': 1,
+	  'transformOrigin': 1,
+	  'transformStyle': 1,
+	  'transitionProperty': 1,
+	  'transitionDuration': 1,
+	  'transitionTimingFunction': 1,
+	  'transitionDelay': 1,
+	  'borderImage': 1,
+	  'borderImageSlice': 1,
+	  'boxShadow': 1,
+	  'backgroundClip': 1,
+	  'backfaceVisibility': 1,
+	  'perspective': 1,
+	  'perspectiveOrigin': 1,
+	  'animation': 1,
+	  'animationDuration': 1,
+	  'animationName': 1,
+	  'animationDelay': 1,
+	  'animationDirection': 1,
+	  'animationIterationCount': 1,
+	  'animationTimingFunction': 1,
+	  'animationPlayState': 1,
+	  'animationFillMode': 1,
+	  'appearance': 1
+	}
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getPrefix     = __webpack_require__(45)
+	var forcePrefixed = __webpack_require__(47)
+	var el            = __webpack_require__(46)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+	    var prefixedValue
+
+	    if (!(key in STYLE)){
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = forcePrefixed(key, value)
+
+	            prefixedValue = '-' + prefix.toLowerCase() + '-' + value
+
+	            if (prefixed in STYLE){
+	                el.style[prefixed] = ''
+	                el.style[prefixed] = prefixedValue
+
+	                if (el.style[prefixed] !== ''){
+	                    value = prefixedValue
+	                }
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = value
+
+	    return value
+	}
+
+/***/ },
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(21)
-	var Loader = __webpack_require__(27)
+	var assign = __webpack_require__(62)
+	var Loader = __webpack_require__(61)
 
 	module.exports = React.createClass({
 
@@ -2800,7 +3934,599 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 23 */
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var hasOwn      = __webpack_require__(49)
+	var getPrefixed = __webpack_require__(50)
+
+	var map      = __webpack_require__(51)
+	var plugable = __webpack_require__(52)
+
+	function plugins(key, value){
+
+		var result = {
+			key  : key,
+			value: value
+		}
+
+		;(RESULT.plugins || []).forEach(function(fn){
+
+			var tmp = map(function(res){
+				return fn(key, value, res)
+			}, result)
+
+			if (tmp){
+				result = tmp
+			}
+		})
+
+		return result
+	}
+
+	function normalize(key, value){
+
+		var result = plugins(key, value)
+
+		return map(function(result){
+			return {
+				key  : getPrefixed(result.key, result.value),
+				value: result.value
+			}
+		}, result)
+
+		return result
+	}
+
+	var RESULT = function(style){
+		var k
+		var item
+		var result = {}
+
+		for (k in style) if (hasOwn(style, k)){
+			item = normalize(k, style[k])
+
+			if (!item){
+				continue
+			}
+
+			map(function(item){
+				result[item.key] = item.value
+			}, item)
+		}
+
+		return result
+	}
+
+	module.exports = plugable(RESULT)
+
+/***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @jsx React.DOM */'use strict';
+
+	var assign = __webpack_require__(78)
+	var React  = __webpack_require__(1)
+	var normalize = __webpack_require__(79)
+
+	function emptyFn() {}
+
+	var TOOL_STYLES = {
+	    true : {display: 'inline-block'},
+	    false: {cursor: 'text', color: 'transparent'}
+	}
+
+	var INDEX = 0
+
+	var DESCRIPTOR = {
+
+	    displayName: 'ReactInputField',
+
+	    propTypes: {
+	        validate : React.PropTypes.oneOfType([
+	            React.PropTypes.func,
+	            React.PropTypes.bool
+	        ]),
+	        isEmpty  : React.PropTypes.func,
+	        clearTool: React.PropTypes.bool
+	    },
+
+	    getInitialState: function(){
+	        return {
+	            defaultValue: this.props.defaultValue
+	        }
+	    },
+
+	    getDefaultProps: function () {
+	        return {
+	            focusOnClick: true,
+	            stopChangePropagation: true,
+	            stopSelectPropagation: true,
+
+	            defaultClearToolStyle: {
+	                fontSize   : 20,
+	                paddingRight: 5,
+	                paddingLeft : 5,
+
+	                alignSelf  : 'center',
+	                cursor     : 'pointer',
+	                userSelect : 'none',
+	                boxSizing: 'border-box'
+	            },
+	            clearToolColor    : '#a8a8a8',
+	            clearToolOverColor: '#7F7C7C',
+	            defaultStyle: {
+	                border    : '1px solid #a8a8a8',
+	                boxSizing : 'border-box'
+	                // ,
+	                // height    : 30
+	            },
+
+	            defaultInnerStyle: {
+	                userSelect: 'none',
+	                width     : '100%',
+	                display   : 'inline-flex',
+	                flexFlow  : 'row',
+	                alignItems: 'stretch'
+	            },
+
+	            defaultInvalidStyle: {
+	                border : '1px solid rgb(248, 144, 144)'
+	            },
+
+	            defaultInputStyle: {
+	                flex   : 1,
+	                border : 0,
+	                height : '100%',
+	                padding: '6px 2px',
+	                outline: 'none',
+	                boxSizing: 'border-box'
+	            },
+
+	            defaultInputInvalidStyle: {
+
+	            },
+
+	            emptyValue: '',
+	            inputClassName: '',
+	            inputProps    : null,
+
+	            clearTool: true,
+
+	            defaultClassName: 'z-field',
+	            emptyClassName  : 'z-empty-value',
+	            invalidClassName: 'z-invalid',
+
+	            toolsPosition: 'right'
+	        }
+	    },
+
+	    render: function() {
+
+	        if (this.valid === undefined){
+	            this.valid = true
+	        }
+
+	        var props = this.prepareProps(this.props, this.state)
+
+	        if (this.valid !== props.valid && typeof props.onValidityChange === 'function'){
+	            setTimeout(function(){
+	                props.onValidityChange(props.valid, props.value, props)
+	            }, 0)
+	        }
+
+	        this.valid = props.valid
+
+	        var children = this.renderChildren(props, this.state)
+
+	        // delete props.value
+
+	        var divProps = assign({}, props)
+	        delete divProps.value
+	        delete divProps.placeholder
+
+	        return React.createElement("div", React.__spread({},  divProps, {"data-display-name": "react-input-field"}), 
+	            React.createElement("div", {style: props.innerStyle}, 
+	                children
+	            )
+	        )
+	    },
+
+	    renderChildren: function(props, state){
+	        var field = this.renderField(props, state)
+	        var tools = this.renderTools(props, state)
+
+	        var children = [field, props.children]
+
+	        if (props.toolsPosition == 'after' || props.toolsPosition == 'right'){
+	            children.push.apply(children, tools)
+	        } else {
+	            children = (tools || []).concat(field)
+	        }
+
+	        if (typeof props.renderChildren == 'function'){
+	            children = props.renderChildren(children)
+	        }
+
+	        return children
+	    },
+
+	    renderField: function(props) {
+	        var inputProps = this.prepareInputProps(props)
+
+	        inputProps.ref = 'input'
+
+	        if (props.inputFactory){
+	            return props.inputFactory(inputProps, props)
+	        }
+
+	        return React.createElement("input", React.__spread({},  inputProps))
+	    },
+
+	    renderTools: function(props, state) {
+
+	        var clearTool = this.renderClearTool(props, state)
+	        var result    = [clearTool]
+
+	        if (typeof props.tools === 'function'){
+	            result = props.tools(props, clearTool)
+	        }
+
+	        return result
+	    },
+
+	    renderClearTool: function(props, state) {
+
+	        if (!props.clearTool || props.readOnly || props.disabled){
+	            return
+	        }
+
+	        var visible         = !this.isEmpty(props)
+	        var visibilityStyle = TOOL_STYLES[visible]
+	        var style           = assign({}, visibilityStyle, this.prepareClearToolStyle(props, state))
+
+	        if (!visible){
+	            assign(style, visibilityStyle)
+	        }
+
+	        return React.createElement("div", {
+	            key: "clearTool", 
+	            className: "z-clear-tool", 
+	            onClick: this.handleClearToolClick, 
+	            onMouseDown: this.handleClearToolMouseDown, 
+	            onMouseOver: this.handleClearToolOver, 
+	            onMouseOut: this.handleClearToolOut, 
+	            style: style
+	        }, "✖")
+	    },
+
+	    handleClearToolMouseDown: function(event) {
+	        event.preventDefault()
+	    },
+
+	    handleClearToolOver: function(){
+	        this.setState({
+	            clearToolOver: true
+	        })
+	    },
+
+	    handleClearToolOut: function(){
+	        this.setState({
+	            clearToolOver: false
+	        })
+	    },
+
+	    isEmpty: function(props) {
+	        var emptyValue = this.getEmptyValue(props)
+
+	        if (typeof props.isEmpty === 'function'){
+	            return props.isEmpty(props, emptyValue)
+	        }
+
+	        var value = props.value
+
+	        if (value == null){
+	            value = ''
+	        }
+
+	        return value === emptyValue
+	    },
+
+	    getEmptyValue: function(props){
+	        var value = props.emptyValue
+
+	        if (typeof value === 'function'){
+	            value = value(props)
+	        }
+
+	        return value
+	    },
+
+	    isValid: function(props) {
+	        var value = props.value
+	        var result = true
+
+	        if (typeof props.validate === 'function'){
+	            result = props.validate(value, props) !== false
+	        }
+
+	        return result
+	    },
+
+	    getInput: function() {
+	        return this.refs.input.getDOMNode()
+	    },
+
+	    focus: function(){
+	        var input = this.getInput()
+
+	        if (input && typeof input.focus === 'function'){
+	            input.focus()
+	        }
+	    },
+
+	    handleClick: function(event){
+	        if (this.props.focusOnClick && !this.isFocused()){
+	            this.focus()
+	        }
+
+	        ;(this.props.onClick || emptyFn)(event)
+	    },
+
+	    handleMouseDown: function(event) {
+	        ;(this.props.onMouseDown || emptyFn)(event)
+	        // event.preventDefault()
+	    },
+
+	    handleClearToolClick: function(event) {
+	        this.notify(this.getEmptyValue(this.props), event)
+	    },
+
+	    handleChange: function(event) {
+	        this.props.stopChangePropagation && event.stopPropagation()
+	        this.notify(event.target.value, event)
+	    },
+
+	    handleSelect: function(event) {
+	        this.props.stopSelectPropagation && event.stopPropagation()
+	        ;(this.props.onSelect || emptyFn)(event)
+	    },
+
+	    notify: function(value, event) {
+	        if (this.props.value === undefined){
+	            this.setState({
+	                defaultValue: value
+	            })
+	        }
+	        ;(this.props.onChange || emptyFn)(value, this.props, event)
+	    },
+
+	    //*****************//
+	    // PREPARE METHODS //
+	    //*****************//
+	    prepareProps: function(thisProps, state) {
+
+	        var props = {}
+
+	        assign(props, thisProps)
+
+	        props.value = this.prepareValue(props, state)
+	        props.valid = this.isValid(props)
+	        props.onClick = this.handleClick
+	        props.onMouseDown = this.handleMouseDown
+
+	        props.className  = this.prepareClassName(props)
+	        props.style      = this.prepareStyle(props)
+	        props.innerStyle = this.prepareInnerStyle(props)
+
+	        return props
+	    },
+
+	    getValue: function() {
+	        var value = this.props.value === undefined?
+	                        this.state.defaultValue:
+	                        this.props.value
+
+	        return value
+	    },
+
+	    prepareValue: function(props, state) {
+	        return this.getValue()
+	    },
+
+	    prepareClassName: function(props) {
+	        var result = [props.className, props.defaultClassName]
+
+	        if (this.isEmpty(props)){
+	            result.push(props.emptyClassName)
+	        }
+
+	        if (!props.valid){
+	            result.push(props.invalidClassName)
+	        }
+
+	        return result.join(' ')
+	    },
+
+	    prepareStyle: function(props) {
+	        var style = assign({}, props.defaultStyle, props.style)
+
+	        if (!props.valid){
+	            assign(style, props.defaultInvalidStyle, props.invalidStyle)
+	        }
+
+	        return style
+	    },
+
+	    prepareInnerStyle: function(props) {
+	        var style = assign({}, props.defaultInnerStyle, props.innerStyle)
+
+	        return normalize(style)
+	    },
+
+	    prepareInputProps: function(props) {
+
+	        var inputProps = {
+	            className: props.inputClassName
+	        }
+
+	        assign(inputProps, props.defaultInputProps, props.inputProps)
+
+	        inputProps.key         = 'field'
+	        inputProps.value       = props.value
+	        inputProps.placeholder = props.placeholder
+	        inputProps.onChange    = this.handleChange
+	        inputProps.onSelect    = this.handleSelect
+	        inputProps.style       = this.prepareInputStyle(props)
+	        inputProps.onFocus     = this.handleFocus
+	        inputProps.onBlur      = this.handleBlur
+	        inputProps.name        = props.name
+	        inputProps.disabled    = props.disabled
+	        inputProps.readOnly    = props.readOnly
+
+	        return inputProps
+	    },
+
+	    handleFocus: function(){
+	        this._focused = true
+	    },
+
+	    handleBlur: function(){
+	        this._focused = false
+	    },
+
+	    isFocused: function(){
+	        return !!this._focused
+	    },
+
+	    prepareInputStyle: function(props) {
+	        var inputStyle = props.inputProps?
+	                            props.inputProps.style:
+	                            null
+
+	        var style = assign({}, props.defaultInputStyle, props.inputStyle, inputStyle)
+
+	        if (!props.valid){
+	            assign(style, props.defaultInputInvalidStyle, props.inputInvalidStyle)
+	        }
+
+	        return normalize(style)
+	    },
+
+	    prepareClearToolStyle: function(props, state) {
+	        var defaultClearToolOverStyle
+	        var clearToolOverStyle
+	        var clearToolColor
+
+	        if (state && state.clearToolOver){
+	            defaultClearToolOverStyle = props.defaultClearToolOverStyle
+	            clearToolOverStyle = props.clearToolOverStyle
+	        }
+
+	        if (props.clearToolColor){
+	            clearToolColor = {
+	                color: props.clearToolColor
+	            }
+	            if (state && state.clearToolOver && props.clearToolOverColor){
+	                clearToolColor = {
+	                    color: props.clearToolOverColor
+	                }
+	            }
+	        }
+
+	        var style = assign(
+	                        {},
+	                        props.defaultClearToolStyle,
+	                        defaultClearToolOverStyle,
+	                        clearToolColor,
+	                        props.clearToolStyle,
+	                        clearToolOverStyle
+	                    )
+
+	        return style
+	    }
+	}
+
+	var ReactClass = React.createClass(DESCRIPTOR)
+
+	ReactClass.descriptor = DESCRIPTOR
+
+	module.exports = ReactClass
+
+/***/ },
+/* 39 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var hasOwn      = __webpack_require__(53)
+	var getPrefixed = __webpack_require__(54)
+
+	var map      = __webpack_require__(55)
+	var plugable = __webpack_require__(56)
+
+	function plugins(key, value){
+
+		var result = {
+			key  : key,
+			value: value
+		}
+
+		;(RESULT.plugins || []).forEach(function(fn){
+
+			var tmp = map(function(res){
+				return fn(key, value, res)
+			}, result)
+
+			if (tmp){
+				result = tmp
+			}
+		})
+
+		return result
+	}
+
+	function normalize(key, value){
+
+		var result = plugins(key, value)
+
+		return map(function(result){
+			return {
+				key  : getPrefixed(result.key, result.value),
+				value: result.value
+			}
+		}, result)
+
+		return result
+	}
+
+	var RESULT = function(style){
+		var k
+		var item
+		var result = {}
+
+		for (k in style) if (hasOwn(style, k)){
+			item = normalize(k, style[k])
+
+			if (!item){
+				continue
+			}
+
+			map(function(item){
+				result[item.key] = item.value
+			}, item)
+		}
+
+		return result
+	}
+
+	module.exports = plugable(RESULT)
+
+/***/ },
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2832,7 +4558,76 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 24 */
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var hasOwn      = __webpack_require__(57)
+	var getPrefixed = __webpack_require__(58)
+
+	var map      = __webpack_require__(59)
+	var plugable = __webpack_require__(60)
+
+	function plugins(key, value){
+
+		var result = {
+			key  : key,
+			value: value
+		}
+
+		;(RESULT.plugins || []).forEach(function(fn){
+
+			var tmp = map(function(res){
+				return fn(key, value, res)
+			}, result)
+
+			if (tmp){
+				result = tmp
+			}
+		})
+
+		return result
+	}
+
+	function normalize(key, value){
+
+		var result = plugins(key, value)
+
+		return map(function(result){
+			return {
+				key  : getPrefixed(result.key, result.value),
+				value: result.value
+			}
+		}, result)
+
+		return result
+	}
+
+	var RESULT = function(style){
+		var k
+		var item
+		var result = {}
+
+		for (k in style) if (hasOwn(style, k)){
+			item = normalize(k, style[k])
+
+			if (!item){
+				continue
+			}
+
+			map(function(item){
+				result[item.key] = item.value
+			}, item)
+		}
+
+		return result
+	}
+
+	module.exports = plugable(RESULT)
+
+/***/ },
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2870,7 +4665,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = curry
 
 /***/ },
-/* 25 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2887,19 +4682,109 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var hasOwn    = __webpack_require__(32)
-	var newify    = __webpack_require__(33)
+	module.exports = function(str){
+		return str?
+				str.charAt(0).toUpperCase() + str.slice(1):
+				''
+	}
+
+/***/ },
+/* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(44)
+	var prefixes     = ["ms", "Moz", "Webkit", "O"]
+
+	var el = __webpack_require__(46)
+
+	var PREFIX
+
+	module.exports = function(key){
+
+		if (PREFIX){
+			return PREFIX
+		}
+
+		var i = 0
+		var len = prefixes.length
+		var tmp
+		var prefix
+
+		for (; i < len; i++){
+			prefix = prefixes[i]
+			tmp = prefix + toUpperFirst(key)
+
+			if (typeof el.style[tmp] != 'undefined'){
+				return PREFIX = prefix
+			}
+		}
+	}
+
+/***/ },
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+
+	var el
+
+	if(!!global.document){
+	  	el = global.document.createElement('div')
+	}
+
+	module.exports = el
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(44)
+	var getPrefix    = __webpack_require__(45)
+	var properties   = __webpack_require__(34)
+
+	/**
+	 * Returns the given key prefixed, if the property is found in the prefixProps map.
+	 *
+	 * Does not test if the property supports the given value unprefixed.
+	 * If you need this, use './getPrefixed' instead
+	 */
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		var prefix = getPrefix(key)
+
+		return prefix?
+					prefix + toUpperFirst(key):
+					key
+	}
+
+/***/ },
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var hasOwn    = __webpack_require__(76)
+	var newify    = __webpack_require__(75)
 
 	var assign      = __webpack_require__(7);
-	var EventEmitter = __webpack_require__(34).EventEmitter
+	var EventEmitter = __webpack_require__(77).EventEmitter
 
-	var inherits = __webpack_require__(29)
-	var VALIDATE = __webpack_require__(30)
+	var inherits = __webpack_require__(66)
+	var VALIDATE = __webpack_require__(67)
 
 	var objectToString = Object.prototype.toString
 
@@ -2910,7 +4795,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function copyList(source, target, list){
 	    if (source){
 	        list.forEach(function(key){
-	            target[key] = source[key]
+	            if (hasOwn(source, key)){
+	                target[key] = source[key]
+	            }
 	        })
 	    }
 
@@ -3936,18 +5823,276 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	})
 
-	__webpack_require__(31)(REGION)
+	__webpack_require__(68)(REGION)
 
 	module.exports = REGION
 
 /***/ },
-/* 27 */
+/* 49 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(obj, prop){
+		return Object.prototype.hasOwnProperty.call(obj, prop)
+	}
+
+
+/***/ },
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getStylePrefixed = __webpack_require__(63)
+	var properties       = __webpack_require__(64)
+
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		return getStylePrefixed(key, value)
+	}
+
+/***/ },
+/* 51 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(fn, item){
+
+		if (!item){
+			return
+		}
+
+		if (Array.isArray(item)){
+			return item.map(fn).filter(function(x){
+				return !!x
+			})
+		} else {
+			return fn(item)
+		}
+	}
+
+/***/ },
+/* 52 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getCssPrefixedValue = __webpack_require__(65)
+
+	module.exports = function(target){
+		target.plugins = target.plugins || [
+			(function(){
+				var values = {
+					'flex':1,
+					'inline-flex':1
+				}
+
+				return function(key, value){
+					if (key === 'display' && value in values){
+						return {
+							key  : key,
+							value: getCssPrefixedValue(key, value)
+						}
+					}
+				}
+			})()
+		]
+
+		target.plugin = function(fn){
+			target.plugins = target.plugins || []
+
+			target.plugins.push(fn)
+		}
+
+		return target
+	}
+
+/***/ },
+/* 53 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(obj, prop){
+		return Object.prototype.hasOwnProperty.call(obj, prop)
+	}
+
+
+/***/ },
+/* 54 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getStylePrefixed = __webpack_require__(70)
+	var properties       = __webpack_require__(71)
+
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		return getStylePrefixed(key, value)
+	}
+
+/***/ },
+/* 55 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(fn, item){
+
+		if (!item){
+			return
+		}
+
+		if (Array.isArray(item)){
+			return item.map(fn).filter(function(x){
+				return !!x
+			})
+		} else {
+			return fn(item)
+		}
+	}
+
+/***/ },
+/* 56 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getCssPrefixedValue = __webpack_require__(69)
+
+	module.exports = function(target){
+		target.plugins = target.plugins || [
+			(function(){
+				var values = {
+					'flex':1,
+					'inline-flex':1
+				}
+
+				return function(key, value){
+					if (key === 'display' && value in values){
+						return {
+							key  : key,
+							value: getCssPrefixedValue(key, value)
+						}
+					}
+				}
+			})()
+		]
+
+		target.plugin = function(fn){
+			target.plugins = target.plugins || []
+
+			target.plugins.push(fn)
+		}
+
+		return target
+	}
+
+/***/ },
+/* 57 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(obj, prop){
+		return Object.prototype.hasOwnProperty.call(obj, prop)
+	}
+
+
+/***/ },
+/* 58 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getStylePrefixed = __webpack_require__(72)
+	var properties       = __webpack_require__(73)
+
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		return getStylePrefixed(key, value)
+	}
+
+/***/ },
+/* 59 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(fn, item){
+
+		if (!item){
+			return
+		}
+
+		if (Array.isArray(item)){
+			return item.map(fn).filter(function(x){
+				return !!x
+			})
+		} else {
+			return fn(item)
+		}
+	}
+
+/***/ },
+/* 60 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getCssPrefixedValue = __webpack_require__(74)
+
+	module.exports = function(target){
+		target.plugins = target.plugins || [
+			(function(){
+				var values = {
+					'flex':1,
+					'inline-flex':1
+				}
+
+				return function(key, value){
+					if (key === 'display' && value in values){
+						return {
+							key  : key,
+							value: getCssPrefixedValue(key, value)
+						}
+					}
+				}
+			})()
+		]
+
+		target.plugin = function(fn){
+			target.plugins = target.plugins || []
+
+			target.plugins.push(fn)
+		}
+
+		return target
+	}
+
+/***/ },
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(21)
+	var assign = __webpack_require__(62)
 
 	module.exports = React.createClass({
 
@@ -4007,89 +6152,171 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 28 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+	'use strict';
 
-	var el;
+	function ToObject(val) {
+		if (val == null) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
 
-	if(!!global.document){
-	  el = global.document.createElement('div');
+		return Object(val);
 	}
 
-	var prefixes = ["ms", "Moz", "Webkit", "O"];
-	var properties = [
-	  'userSelect',
-	  'transform',
-	  'transition',
-	  'transformOrigin',
-	  'transformStyle',
-	  'transitionProperty',
-	  'transitionDuration',
-	  'transitionTimingFunction',
-	  'transitionDelay',
-	  'borderImage',
-	  'borderImageSlice',
-	  'boxShadow',
-	  'backgroundClip',
-	  'backfaceVisibility',
-	  'perspective',
-	  'perspectiveOrigin',
-	  'animation',
-	  'animationDuration',
-	  'animationName',
-	  'animationDelay',
-	  'animationDirection',
-	  'animationIterationCount',
-	  'animationTimingFunction',
-	  'animationPlayState',
-	  'animationFillMode',
-	  'appearance'
-	];
+	module.exports = Object.assign || function (target, source) {
+		var from;
+		var keys;
+		var to = ToObject(target);
 
-	function GetVendorPrefix(property) {
-	  if(properties.indexOf(property) == -1 || !global.document || typeof el.style[property] !== 'undefined'){
-	    return property;
-	  }
+		for (var s = 1; s < arguments.length; s++) {
+			from = arguments[s];
+			keys = Object.keys(Object(from));
 
-	  property = property[0].toUpperCase() + property.slice(1);
-	  var temp;
+			for (var i = 0; i < keys.length; i++) {
+				to[keys[i]] = from[keys[i]];
+			}
+		}
 
-	  for(var i = 0; i < prefixes.length; i++){
-	    temp = prefixes[i] + property;
-	    if(typeof el.style[temp] !== 'undefined'){
-	      prefixes = [prefixes[i]]; // we only need to check this one prefix from now on.
-	      return temp;
-	    }
-	  }
-	  return property[0].toLowerCase() + property.slice(1);
-	}
+		return to;
+	};
 
-
-	module.exports = (function(){
-	  var cache = {};
-	  return function(obj){
-	    if(!global.document){
-	      return obj;
-	    }
-
-	    var result = {};
-
-	    for(var key in obj){
-	      if(cache[key] === undefined){
-	        cache[key] = GetVendorPrefix(key);
-	      }
-	      result[cache[key]] = obj[key];
-	    }
-
-	    return result;
-	  };
-	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 29 */
+/* 63 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(80)
+	var getPrefix    = __webpack_require__(81)
+	var el           = __webpack_require__(82)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key// + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+
+	    if (!(key in STYLE)){//we have to prefix
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = prefix + toUpperFirst(key)
+
+	            if (prefixed in STYLE){
+	                key = prefixed
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = key
+
+	    return key
+	}
+
+/***/ },
+/* 64 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = {
+	  'alignItems': 1,
+	  'justifyContent': 1,
+	  'flex': 1,
+	  'flexFlow': 1,
+
+	  'userSelect': 1,
+	  'transform': 1,
+	  'transition': 1,
+	  'transformOrigin': 1,
+	  'transformStyle': 1,
+	  'transitionProperty': 1,
+	  'transitionDuration': 1,
+	  'transitionTimingFunction': 1,
+	  'transitionDelay': 1,
+	  'borderImage': 1,
+	  'borderImageSlice': 1,
+	  'boxShadow': 1,
+	  'backgroundClip': 1,
+	  'backfaceVisibility': 1,
+	  'perspective': 1,
+	  'perspectiveOrigin': 1,
+	  'animation': 1,
+	  'animationDuration': 1,
+	  'animationName': 1,
+	  'animationDelay': 1,
+	  'animationDirection': 1,
+	  'animationIterationCount': 1,
+	  'animationTimingFunction': 1,
+	  'animationPlayState': 1,
+	  'animationFillMode': 1,
+	  'appearance': 1
+	}
+
+/***/ },
+/* 65 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getPrefix     = __webpack_require__(81)
+	var forcePrefixed = __webpack_require__(83)
+	var el            = __webpack_require__(82)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+	    var prefixedValue
+
+	    if (!(key in STYLE)){
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = forcePrefixed(key, value)
+
+	            prefixedValue = '-' + prefix.toLowerCase() + '-' + value
+
+	            if (prefixed in STYLE){
+	                el.style[prefixed] = ''
+	                el.style[prefixed] = prefixedValue
+
+	                if (el.style[prefixed] !== ''){
+	                    value = prefixedValue
+	                }
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = value
+
+	    return value
+	}
+
+/***/ },
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4107,7 +6334,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 30 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4139,13 +6366,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 31 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var hasOwn   = __webpack_require__(32)
-	var VALIDATE = __webpack_require__(30)
+	var hasOwn   = __webpack_require__(76)
+	var VALIDATE = __webpack_require__(67)
 
 	module.exports = function(REGION){
 
@@ -4358,7 +6585,281 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 32 */
+/* 69 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getPrefix     = __webpack_require__(84)
+	var forcePrefixed = __webpack_require__(85)
+	var el            = __webpack_require__(86)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+	    var prefixedValue
+
+	    if (!(key in STYLE)){
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = forcePrefixed(key, value)
+
+	            prefixedValue = '-' + prefix.toLowerCase() + '-' + value
+
+	            if (prefixed in STYLE){
+	                el.style[prefixed] = ''
+	                el.style[prefixed] = prefixedValue
+
+	                if (el.style[prefixed] !== ''){
+	                    value = prefixedValue
+	                }
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = value
+
+	    return value
+	}
+
+/***/ },
+/* 70 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(87)
+	var getPrefix    = __webpack_require__(84)
+	var el           = __webpack_require__(86)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key// + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+
+	    if (!(key in STYLE)){//we have to prefix
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = prefix + toUpperFirst(key)
+
+	            if (prefixed in STYLE){
+	                key = prefixed
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = key
+
+	    return key
+	}
+
+/***/ },
+/* 71 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = {
+	  'alignItems': 1,
+	  'justifyContent': 1,
+	  'flex': 1,
+	  'flexFlow': 1,
+
+	  'userSelect': 1,
+	  'transform': 1,
+	  'transition': 1,
+	  'transformOrigin': 1,
+	  'transformStyle': 1,
+	  'transitionProperty': 1,
+	  'transitionDuration': 1,
+	  'transitionTimingFunction': 1,
+	  'transitionDelay': 1,
+	  'borderImage': 1,
+	  'borderImageSlice': 1,
+	  'boxShadow': 1,
+	  'backgroundClip': 1,
+	  'backfaceVisibility': 1,
+	  'perspective': 1,
+	  'perspectiveOrigin': 1,
+	  'animation': 1,
+	  'animationDuration': 1,
+	  'animationName': 1,
+	  'animationDelay': 1,
+	  'animationDirection': 1,
+	  'animationIterationCount': 1,
+	  'animationTimingFunction': 1,
+	  'animationPlayState': 1,
+	  'animationFillMode': 1,
+	  'appearance': 1
+	}
+
+/***/ },
+/* 72 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(88)
+	var getPrefix    = __webpack_require__(89)
+	var el           = __webpack_require__(90)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key// + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+
+	    if (!(key in STYLE)){//we have to prefix
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = prefix + toUpperFirst(key)
+
+	            if (prefixed in STYLE){
+	                key = prefixed
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = key
+
+	    return key
+	}
+
+/***/ },
+/* 73 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = {
+	  'alignItems': 1,
+	  'justifyContent': 1,
+	  'flex': 1,
+	  'flexFlow': 1,
+
+	  'userSelect': 1,
+	  'transform': 1,
+	  'transition': 1,
+	  'transformOrigin': 1,
+	  'transformStyle': 1,
+	  'transitionProperty': 1,
+	  'transitionDuration': 1,
+	  'transitionTimingFunction': 1,
+	  'transitionDelay': 1,
+	  'borderImage': 1,
+	  'borderImageSlice': 1,
+	  'boxShadow': 1,
+	  'backgroundClip': 1,
+	  'backfaceVisibility': 1,
+	  'perspective': 1,
+	  'perspectiveOrigin': 1,
+	  'animation': 1,
+	  'animationDuration': 1,
+	  'animationName': 1,
+	  'animationDelay': 1,
+	  'animationDirection': 1,
+	  'animationIterationCount': 1,
+	  'animationTimingFunction': 1,
+	  'animationPlayState': 1,
+	  'animationFillMode': 1,
+	  'appearance': 1
+	}
+
+/***/ },
+/* 74 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getPrefix     = __webpack_require__(89)
+	var forcePrefixed = __webpack_require__(91)
+	var el            = __webpack_require__(90)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+	    var prefixedValue
+
+	    if (!(key in STYLE)){
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = forcePrefixed(key, value)
+
+	            prefixedValue = '-' + prefix.toLowerCase() + '-' + value
+
+	            if (prefixed in STYLE){
+	                el.style[prefixed] = ''
+	                el.style[prefixed] = prefixedValue
+
+	                if (el.style[prefixed] !== ''){
+	                    value = prefixedValue
+	                }
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = value
+
+	    return value
+	}
+
+/***/ },
+/* 75 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getInstantiatorFunction = __webpack_require__(92)
+
+	module.exports = function(fn, args){
+		return getInstantiatorFunction(args.length)(fn, args)
+	}
+
+/***/ },
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
@@ -4401,17 +6902,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 33 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var getInstantiatorFunction = __webpack_require__(35)
-
-	module.exports = function(fn, args){
-		return getInstantiatorFunction(args.length)(fn, args)
-	}
-
-/***/ },
-/* 34 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -4718,7 +7209,378 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 35 */
+/* 78 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	function ToObject(val) {
+		if (val == null) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
+
+		return Object(val);
+	}
+
+	module.exports = Object.assign || function (target, source) {
+		var from;
+		var keys;
+		var to = ToObject(target);
+
+		for (var s = 1; s < arguments.length; s++) {
+			from = arguments[s];
+			keys = Object.keys(Object(from));
+
+			for (var i = 0; i < keys.length; i++) {
+				to[keys[i]] = from[keys[i]];
+			}
+		}
+
+		return to;
+	};
+
+
+/***/ },
+/* 79 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var hasOwn      = __webpack_require__(93)
+	var getPrefixed = __webpack_require__(94)
+
+	var map      = __webpack_require__(95)
+	var plugable = __webpack_require__(96)
+
+	function plugins(key, value){
+
+		var result = {
+			key  : key,
+			value: value
+		}
+
+		;(RESULT.plugins || []).forEach(function(fn){
+
+			var tmp = map(function(res){
+				return fn(key, value, res)
+			}, result)
+
+			if (tmp){
+				result = tmp
+			}
+		})
+
+		return result
+	}
+
+	function normalize(key, value){
+
+		var result = plugins(key, value)
+
+		return map(function(result){
+			return {
+				key  : getPrefixed(result.key, result.value),
+				value: result.value
+			}
+		}, result)
+
+		return result
+	}
+
+	var RESULT = function(style){
+		var k
+		var item
+		var result = {}
+
+		for (k in style) if (hasOwn(style, k)){
+			item = normalize(k, style[k])
+
+			if (!item){
+				continue
+			}
+
+			map(function(item){
+				result[item.key] = item.value
+			}, item)
+		}
+
+		return result
+	}
+
+	module.exports = plugable(RESULT)
+
+/***/ },
+/* 80 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(str){
+		return str?
+				str.charAt(0).toUpperCase() + str.slice(1):
+				''
+	}
+
+/***/ },
+/* 81 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(80)
+	var prefixes     = ["ms", "Moz", "Webkit", "O"]
+
+	var el = __webpack_require__(82)
+
+	var PREFIX
+
+	module.exports = function(key){
+
+		if (PREFIX){
+			return PREFIX
+		}
+
+		var i = 0
+		var len = prefixes.length
+		var tmp
+		var prefix
+
+		for (; i < len; i++){
+			prefix = prefixes[i]
+			tmp = prefix + toUpperFirst(key)
+
+			if (typeof el.style[tmp] != 'undefined'){
+				return PREFIX = prefix
+			}
+		}
+	}
+
+/***/ },
+/* 82 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+
+	var el
+
+	if(!!global.document){
+	  	el = global.document.createElement('div')
+	}
+
+	module.exports = el
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 83 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(80)
+	var getPrefix    = __webpack_require__(81)
+	var properties   = __webpack_require__(64)
+
+	/**
+	 * Returns the given key prefixed, if the property is found in the prefixProps map.
+	 *
+	 * Does not test if the property supports the given value unprefixed.
+	 * If you need this, use './getPrefixed' instead
+	 */
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		var prefix = getPrefix(key)
+
+		return prefix?
+					prefix + toUpperFirst(key):
+					key
+	}
+
+/***/ },
+/* 84 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(87)
+	var prefixes     = ["ms", "Moz", "Webkit", "O"]
+
+	var el = __webpack_require__(86)
+
+	var PREFIX
+
+	module.exports = function(key){
+
+		if (PREFIX){
+			return PREFIX
+		}
+
+		var i = 0
+		var len = prefixes.length
+		var tmp
+		var prefix
+
+		for (; i < len; i++){
+			prefix = prefixes[i]
+			tmp = prefix + toUpperFirst(key)
+
+			if (typeof el.style[tmp] != 'undefined'){
+				return PREFIX = prefix
+			}
+		}
+	}
+
+/***/ },
+/* 85 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(87)
+	var getPrefix    = __webpack_require__(84)
+	var properties   = __webpack_require__(71)
+
+	/**
+	 * Returns the given key prefixed, if the property is found in the prefixProps map.
+	 *
+	 * Does not test if the property supports the given value unprefixed.
+	 * If you need this, use './getPrefixed' instead
+	 */
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		var prefix = getPrefix(key)
+
+		return prefix?
+					prefix + toUpperFirst(key):
+					key
+	}
+
+/***/ },
+/* 86 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+
+	var el
+
+	if(!!global.document){
+	  	el = global.document.createElement('div')
+	}
+
+	module.exports = el
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 87 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(str){
+		return str?
+				str.charAt(0).toUpperCase() + str.slice(1):
+				''
+	}
+
+/***/ },
+/* 88 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(str){
+		return str?
+				str.charAt(0).toUpperCase() + str.slice(1):
+				''
+	}
+
+/***/ },
+/* 89 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(88)
+	var prefixes     = ["ms", "Moz", "Webkit", "O"]
+
+	var el = __webpack_require__(90)
+
+	var PREFIX
+
+	module.exports = function(key){
+
+		if (PREFIX){
+			return PREFIX
+		}
+
+		var i = 0
+		var len = prefixes.length
+		var tmp
+		var prefix
+
+		for (; i < len; i++){
+			prefix = prefixes[i]
+			tmp = prefix + toUpperFirst(key)
+
+			if (typeof el.style[tmp] != 'undefined'){
+				return PREFIX = prefix
+			}
+		}
+	}
+
+/***/ },
+/* 90 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+
+	var el
+
+	if(!!global.document){
+	  	el = global.document.createElement('div')
+	}
+
+	module.exports = el
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 91 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(88)
+	var getPrefix    = __webpack_require__(89)
+	var properties   = __webpack_require__(73)
+
+	/**
+	 * Returns the given key prefixed, if the property is found in the prefixProps map.
+	 *
+	 * Does not test if the property supports the given value unprefixed.
+	 * If you need this, use './getPrefixed' instead
+	 */
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		var prefix = getPrefix(key)
+
+		return prefix?
+					prefix + toUpperFirst(key):
+					key
+	}
+
+/***/ },
+/* 92 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(){
@@ -4749,6 +7611,314 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	}()
+
+/***/ },
+/* 93 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(obj, prop){
+		return Object.prototype.hasOwnProperty.call(obj, prop)
+	}
+
+
+/***/ },
+/* 94 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getStylePrefixed = __webpack_require__(98)
+	var properties       = __webpack_require__(99)
+
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		return getStylePrefixed(key, value)
+	}
+
+/***/ },
+/* 95 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(fn, item){
+
+		if (!item){
+			return
+		}
+
+		if (Array.isArray(item)){
+			return item.map(fn).filter(function(x){
+				return !!x
+			})
+		} else {
+			return fn(item)
+		}
+	}
+
+/***/ },
+/* 96 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getCssPrefixedValue = __webpack_require__(97)
+
+	module.exports = function(target){
+		target.plugins = target.plugins || [
+			(function(){
+				var values = {
+					'flex':1,
+					'inline-flex':1
+				}
+
+				return function(key, value){
+					if (key === 'display' && value in values){
+						return {
+							key  : key,
+							value: getCssPrefixedValue(key, value)
+						}
+					}
+				}
+			})()
+		]
+
+		target.plugin = function(fn){
+			target.plugins = target.plugins || []
+
+			target.plugins.push(fn)
+		}
+
+		return target
+	}
+
+/***/ },
+/* 97 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getPrefix     = __webpack_require__(100)
+	var forcePrefixed = __webpack_require__(101)
+	var el            = __webpack_require__(102)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+	    var prefixedValue
+
+	    if (!(key in STYLE)){
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = forcePrefixed(key, value)
+
+	            prefixedValue = '-' + prefix.toLowerCase() + '-' + value
+
+	            if (prefixed in STYLE){
+	                el.style[prefixed] = ''
+	                el.style[prefixed] = prefixedValue
+
+	                if (el.style[prefixed] !== ''){
+	                    value = prefixedValue
+	                }
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = value
+
+	    return value
+	}
+
+/***/ },
+/* 98 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(103)
+	var getPrefix    = __webpack_require__(100)
+	var el           = __webpack_require__(102)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key// + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+
+	    if (!(key in STYLE)){//we have to prefix
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = prefix + toUpperFirst(key)
+
+	            if (prefixed in STYLE){
+	                key = prefixed
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = key
+
+	    return key
+	}
+
+/***/ },
+/* 99 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = {
+	  'alignItems': 1,
+	  'justifyContent': 1,
+	  'flex': 1,
+	  'flexFlow': 1,
+
+	  'userSelect': 1,
+	  'transform': 1,
+	  'transition': 1,
+	  'transformOrigin': 1,
+	  'transformStyle': 1,
+	  'transitionProperty': 1,
+	  'transitionDuration': 1,
+	  'transitionTimingFunction': 1,
+	  'transitionDelay': 1,
+	  'borderImage': 1,
+	  'borderImageSlice': 1,
+	  'boxShadow': 1,
+	  'backgroundClip': 1,
+	  'backfaceVisibility': 1,
+	  'perspective': 1,
+	  'perspectiveOrigin': 1,
+	  'animation': 1,
+	  'animationDuration': 1,
+	  'animationName': 1,
+	  'animationDelay': 1,
+	  'animationDirection': 1,
+	  'animationIterationCount': 1,
+	  'animationTimingFunction': 1,
+	  'animationPlayState': 1,
+	  'animationFillMode': 1,
+	  'appearance': 1
+	}
+
+/***/ },
+/* 100 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(103)
+	var prefixes     = ["ms", "Moz", "Webkit", "O"]
+
+	var el = __webpack_require__(102)
+
+	var PREFIX
+
+	module.exports = function(key){
+
+		if (PREFIX){
+			return PREFIX
+		}
+
+		var i = 0
+		var len = prefixes.length
+		var tmp
+		var prefix
+
+		for (; i < len; i++){
+			prefix = prefixes[i]
+			tmp = prefix + toUpperFirst(key)
+
+			if (typeof el.style[tmp] != 'undefined'){
+				return PREFIX = prefix
+			}
+		}
+	}
+
+/***/ },
+/* 101 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(103)
+	var getPrefix    = __webpack_require__(100)
+	var properties   = __webpack_require__(99)
+
+	/**
+	 * Returns the given key prefixed, if the property is found in the prefixProps map.
+	 *
+	 * Does not test if the property supports the given value unprefixed.
+	 * If you need this, use './getPrefixed' instead
+	 */
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		var prefix = getPrefix(key)
+
+		return prefix?
+					prefix + toUpperFirst(key):
+					key
+	}
+
+/***/ },
+/* 102 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+
+	var el
+
+	if(!!global.document){
+	  	el = global.document.createElement('div')
+	}
+
+	module.exports = el
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 103 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(str){
+		return str?
+				str.charAt(0).toUpperCase() + str.slice(1):
+				''
+	}
 
 /***/ }
 /******/ ])
