@@ -2,7 +2,11 @@ module.exports = [
   {
     test: /\.(js|jsx)$/,
     exclude: /node_modules/,
-    loader: 'babel'
+    // include: path.join(__dirname, '../')
+    loaders: [
+      'react-hot-loader',
+      'babel-loader'
+    ]
   },
   {
     test: /\.scss$/,

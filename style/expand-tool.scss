@@ -1,0 +1,14 @@
+.react-combo__expand-tool {
+  display: inline-flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: center;
+  line-height: 0px;
+  cursor: pointer;
+}
+
+.react-combo--disabled {
+  .react-combo__expand-tool {
+    cursor: auto;
+  }
+}

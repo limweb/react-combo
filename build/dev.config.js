@@ -1,11 +1,38 @@
+var PORT = 9090;
+var webpack = require('webpack')
+
+var definePlugin = new webpack.DefinePlugin({
+  //we expose all vars exported by env.js to the client
+  'process.env': JSON.stringify({
+    NODE_ENV: 'development'
+  })
+});
+
 module.exports = {
-  entry: './index.js',
+  entry: [
+    'webpack-dev-server/client?http://localhost:' + PORT,
+    'webpack/hot/only-dev-server',
+    './index.js'
+  ],
+  output: {
+    publicPath: '/assets/'
+  },
   module: {
     loaders: require('./loaders.config')
   },
+  externals: {
+    faker: 'faker'
+  },
+  plugins: [
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoErrorsPlugin(),
+    definePlugin
+  ],
   devServer: {
     publicPath: '/assets/',
-    port: 9090,
-    host: '0.0.0.0'
+    port: PORT,
+    hot: true,
+    host: 'localhost',
+    historyApiFallback: true
   }
 }

@@ -19,15 +19,9 @@ class App extends Component {
     return <div className="App" style={{padding: 10, height: 400}}>
       <input type="text" defaultValue="a" />
       <Combo
-        data={initialData}
+        dataSource={initialData}
+        displayProperty="lastName"
         focusedClassName="focused"
-        style={{
-
-            padding: 20,
-            width: 400
-            // ,
-            // top: 500
-        }}
       />
       <input type="text" defaultValue="b" />
     </div>

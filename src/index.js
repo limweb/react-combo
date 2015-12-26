@@ -8,6 +8,8 @@ import Field from 'react-field'
 import ExpandTool from './ExpandTool'
 
 import join from './join'
+import fieldMethods from './fieldMethods'
+import listMethods from './listMethods'
 
 export default class Combo extends Component {
 
@@ -26,12 +28,21 @@ export default class Combo extends Component {
 
     return <div
       {...props}
+      style={null}
       data={null}
       tabIndex={this.state.focused? -1: this.props.tabIndex || 0}
       onFocus={this.onFocus}
     >
-      {this.renderField(props)}
-      <ExpandTool onExpandChange={this.onExpandChange} focused={this.state.focused} expanded={expanded} />
+      <div className="react-combo__wrapper" style={props.style}>
+        {this.renderField(props)}
+        <ExpandTool
+          onExpandChange={this.onExpandChange}
+          focused={this.state.focused}
+          expanded={expanded}
+        />
+      </div>
+
+      {this.renderList(props)}
     </div>
   }
 
@@ -41,40 +52,6 @@ export default class Combo extends Component {
     })
 
     this.props.onExpandChange(value)
-  }
-
-  renderField(props){
-
-    const fieldProps = assign({}, props.fieldProps)
-    const className = join(
-      fieldProps.className,
-      'react-combo__field'
-    )
-
-    return <Field
-      tabIndex={-1}
-      ref={(f) => this.field = f}
-      className={className}
-      onFocus={this.onFieldFocus}
-      onBlur={this.onFieldBlur}
-    />
-  }
-
-  onFieldFocus(event){
-
-    this.setState({
-      focused: true
-    })
-
-    this.props.onFocus(event)
-  }
-
-  onFieldBlur(event){
-    this.setState({
-      focused: false
-    })
-
-    this.props.onBlur(event)
   }
 
   onFocus(){
@@ -104,9 +81,20 @@ export default class Combo extends Component {
   }
 }
 
+assign(
+  Combo.prototype,
+  fieldMethods,
+  listMethods
+);
+
 Combo.defaultProps = {
   onExpandChange: () => {},
   onFocus: () => {},
-  onBlur: () => {}
+  onBlur: () => {},
+
+  expandOnFocus: true,
+
+  idProperty: 'id',
+  displayProperty: 'label'
 }
 

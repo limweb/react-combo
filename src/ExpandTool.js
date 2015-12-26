@@ -1,9 +1,8 @@
-import React from 'react'
-import { findDOMNode } from 'react-dom'
+import React, { PropTypes } from 'react'
 import Component from 'react-class'
-import assign from 'object-assign'
 
-import join from './join'
+const DOWN = '▼'
+const UP = '▲'
 
 export default class ExpandTool extends Component {
 
@@ -12,18 +11,25 @@ export default class ExpandTool extends Component {
 
     return <div
       {...props}
+      className="react-combo__expand-tool"
       onMouseDown={this.onMouseDown}
     >
-      x
+      {props.expanded? UP: DOWN}
     </div>
   }
 
   onMouseDown(event){
-    event.preventDefault()
+    //prevent default so that the field does not get blurred
+    this.props.focused && event.preventDefault()
 
     const expanded = !this.props.expanded;
 
-    console.log('exp: ', expanded)
     this.props.onExpandChange(expanded)
   }
+}
+
+ExpandTool.propTypes = {
+  focused: PropTypes.bool,
+  expanded: PropTypes.bool,
+  onExpandChange: PropTypes.func
 }

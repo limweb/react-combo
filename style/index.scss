@@ -1,8 +1,8 @@
 .react-combo {
   display: inline-flex;
-  flex-align: row;
+  flex-flow: row;
   position: relative;
-  border: 1px solid lighten(gray, 30%);
+  
 
   box-sizing: border-box;
 
@@ -10,15 +10,17 @@
     box-sizing: border-box;
   }
 
-  padding: 3px 5px;
   cursor: text;
+}
 
-  &.react-combo--focused {
-    outline: 1px solid gray;
-  }
-  &.react-combo--expanded {
-    outline: 1px solid red;
-  }
+.react-combo__wrapper {
+  display: inline-flex;
+  flex-flow: row;
+  flex: 1;
+
+  border: 1px solid lighten(gray, 30%);
+
+  padding: 20px 50px;
 }
 
 .react-combo__field {
@@ -27,4 +29,17 @@
   outline: none;
 }
 
-@import './list'
+&.react-combo--focused {
+  .react-combo__wrapper {
+    border: 1px solid gray;
+  }
+}
+
+&.react-combo--expanded {
+  .react-combo__wrapper {
+    border: 1px solid red;
+  }
+}
+
+@import './list';
+@import './expand-tool';

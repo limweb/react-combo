@@ -13,7 +13,7 @@ export default class Item extends Component {
     const className = join(props.className, 'react-combo__list-item')
 
     return <li {...props} data={null} className={className}>
-      data[props.displayValue]
+      {data[props.displayProperty]}
     </li>
   }
 }
