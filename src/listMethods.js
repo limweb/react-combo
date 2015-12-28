@@ -8,24 +8,22 @@ import join from './join'
 const renderList = function(props) {
 
   const expanded = this.state.expanded
+  const currentIndex = this.state.currentIndex
 
-  let listProps = assign({}, {
-    listPosition: props.listPosition || 'top',
-    idProperty: props.idProperty,
-    displayProperty: props.displayProperty
-  }, props.listProps, {
+  const listProps = {
     visible: expanded,
-    expanded
-  })
-
-  if (!listProps.dataSource && props.dataSource){
-    listProps.dataSource = props.dataSource
+    expanded,
+    currentIndex,
+    data: props.data,
+    idProperty: props.idProperty,
+    displayProperty: props.displayProperty,
+    disabledProperty: props.disabledProperty,
+    listPosition: props.listPosition
   }
 
-  listProps.className = join(
-    listProps.className,
-    'react-combo__list'
-  )
+  if (props.childList){
+    return React.cloneElement(props.childList, listProps)
+  }
 
   let list
 

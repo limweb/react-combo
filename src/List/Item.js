@@ -10,7 +10,7 @@ export default class Item extends Component {
     const props = this.props;
     const data = props.data;
 
-    const className = join(props.className, 'react-combo__list-item')
+    const className = join(props.className, 'react-combo__list-item', props.current? 'react-combo__list-item--current': null)
 
     return <li {...props} data={null} className={className}>
       {data[props.displayProperty]}
