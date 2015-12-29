@@ -1,7 +1,18 @@
 .react-combo__list-item {
   padding: 4px 10px;
+  cursor: pointer;
 }
 
+$selected: #c7e5ee;
+
 .react-combo__list-item--current {
-  background: blue;
+  background: #e6f2ff;
 }
+.react-combo__list-item--selected {
+  background: $selected;
+}
+
+.react-combo__list-item--current.react-combo__list-item--selected {
+  background: darken($selected, 10%);
+}
+

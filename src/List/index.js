@@ -3,6 +3,8 @@ import { findDOMNode } from 'react-dom'
 import Component from 'react-class'
 import assign from 'object-assign'
 
+import hasOwn from 'hasown'
+
 import join from '../join'
 import Item from './Item'
 import scrollToRowIfNeeded from './scrollToRowIfNeeded'
@@ -38,7 +40,7 @@ export default class List extends Component {
       'react-combo__list'
     )
 
-    return <ul {...props} className={className}>
+    return <ul {...props} data={null} className={className}>
       {data.map(this.renderItem)}
     </ul>
   }
@@ -60,20 +62,35 @@ export default class List extends Component {
   }
 
   renderItem(item, index){
-    const id = item[this.props.idProperty];
+    const id = item[this.props.idProperty]
+    const selected = hasOwn(this.props.selectedMap, id)
 
     return <Item
       key={id}
       data={item}
+      selected={selected}
       current={index === this.p.currentIndex}
       displayProperty={this.props.displayProperty}
+      onClick={this.onItemClick.bind(this, item, id, index)}
+      onMouseEnter={this.onItemMouseEnter.bind(this, item, id, index)}
     />
+  }
+
+  onItemClick(item, id, index, event){
+    this.props.onItemClick(item, id, index, event)
+  }
+
+  onItemMouseEnter(item, id, index, event){
+    this.props.onItemMouseEnter(item, id, index, event)
   }
 }
 
 List.defaultProps = {
   listPosition: 'top',
-  isComboList: true
+  isComboList: true,
+
+  onItemClick: () => {},
+  onItemMouseEnter: () => {}
 }
 
 List.propTypes = {

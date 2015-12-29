@@ -20,12 +20,17 @@ const dataSource = new Promise((resolve, reject) => {
   }, 2000)
 })
 
+
+function renderItem(props){
+  return <li {...props}>{props.item.label}!</li>
+}
+
 class App extends Component {
   render(){
     return <div className="App" style={{padding: 10, height: 400}}>
       <input type="text" defaultValue="a" />
 
-      <Combo displayProperty="lastName" value={[4, 3, 14]} dataSource={data} focusedClassName="focused" dropdown>
+      <Combo renderItem={renderItem} displayProperty="lastName" defaultValue={[4,7, 9, 12]} dataSource={data} focusedClassName="focused">
         <List
 
           currentIndex={1}

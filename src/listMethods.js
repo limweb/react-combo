@@ -18,7 +18,10 @@ const renderList = function(props) {
     idProperty: props.idProperty,
     displayProperty: props.displayProperty,
     disabledProperty: props.disabledProperty,
-    listPosition: props.listPosition
+    listPosition: props.listPosition,
+    selectedMap: props.selectedMap,
+    onItemClick: this.onItemClick,
+    onItemMouseEnter: this.onItemMouseEnter
   }
 
   if (props.childList){
@@ -38,6 +41,22 @@ const renderList = function(props) {
   return list
 }
 
+const onItemClick = function(item, id, index) {
+  this.selectAt(index)
+
+  this.props.onItemClick(item, id, index)
+}
+
+const onItemMouseEnter = function(item, id, index) {
+  this.setState({
+    currentIndex: index
+  })
+
+  this.props.onItemMouseEnter(item, id, index)
+}
+
 export default {
-  renderList
+  renderList,
+  onItemClick,
+  onItemMouseEnter
 }

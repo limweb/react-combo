@@ -4,6 +4,7 @@ import Component from 'react-class'
 import assign from 'object-assign'
 
 import Field from 'react-field'
+import hasOwn from 'hasown'
 
 import ExpandTool from './ExpandTool'
 
@@ -28,7 +29,10 @@ export default class Combo extends Component {
       currentIndex: props.currentIndex,
       value: props.defaultValue,
       data: [],
-      dataMap: {}
+      dataMap: {},
+      filterValue: '',
+      text: '',
+      activeTagIndex: -1
     }
   }
 
@@ -68,6 +72,44 @@ export default class Combo extends Component {
     }
   }
 
+  setText(value){
+    this.setState({
+      text: value
+    })
+  }
+
+  filterList(value){
+    this.setState({
+      filterValue: value,
+      filterData: this.getFilteredData(value)
+    })
+  }
+
+  getFilteredData(value, data){
+
+    const props = this.p
+
+    if (value === undefined){
+      value = this.state.filterValue
+    }
+
+    if (data === undefined){
+      data = this.state.data
+    }
+
+    if (!value){
+      return data
+    }
+
+    const filter = props.filter
+
+    return filter(value, data, props)
+  }
+
+  getData(){
+    return this.state.filterData || this.state.data;
+  }
+
   setData(data){
 
     const props = this.p || this.props;
@@ -77,9 +119,14 @@ export default class Combo extends Component {
       return acc
     }, {})
 
+    const filterData = this.state.filterValue?
+                        this.getFilteredData(this.state.filterValue, data):
+                        undefined
+
     this.setState({
       dataMap,
-      data
+      data,
+      filterData
     })
   }
 
@@ -88,7 +135,9 @@ export default class Combo extends Component {
     const expanded = this.state.expanded
 
     const list = this.renderList(props)
+    const tags = this.renderTags(props)
     const field = this.renderField(props)
+    const hidden = this.renderHiddenField(props)
 
     const loading = this.p.loading
 
@@ -100,7 +149,9 @@ export default class Combo extends Component {
       onFocus={this.onFocus}
     >
       <div className="react-combo__wrapper" style={props.style}>
+        {tags}
         {field}
+        {hidden}
         <ExpandTool
           onExpandChange={this.onExpandChange}
           focused={this.state.focused}
@@ -112,6 +163,41 @@ export default class Combo extends Component {
     </div>
   }
 
+  renderTags(props) {
+    const tags = props.selectedItems.map(this.renderItemTag)
+
+    return <div className="react-combo__value-tags" children={tags} />
+  }
+
+  renderItemTag(item, index) {
+    const props = this.p
+
+    const displayProperty = props.displayProperty
+    const idProperty = props.idProperty
+
+    const id = item[idProperty]
+    const label = item[displayProperty]
+    const active = index === props.activeTagIndex
+
+    const tagProps = {
+      key: id,
+      onMouseDown: this.onTagMouseDown.bind(this, item, index),
+      className: join('react-combo__value-tag', active? 'react-combo__value-tag--active': null),
+      item: item,
+      idProperty,
+      displayProperty,
+      children: label
+    }
+
+    return <div {...tagProps} />
+  }
+
+  onTagMouseDown(item, index, event){
+    event.preventDefault()
+
+    this.setActiveTag(index)
+  }
+
   onExpandChange(value){
     this.setState({
       expanded: value
@@ -120,26 +206,107 @@ export default class Combo extends Component {
     this.props.onExpandChange(value)
   }
 
-  onFocus(){
+  onFocus(event){
+    if (event.target == findDOMNode(this.hiddenField)){
+      return
+    }
+
     this.focusField()
+  }
+
+  setActiveTag(index){
+    if (index < 0 || index >= this.p.value.length){
+      //out of range
+      index = -1
+      this.focusField()
+    } else {
+      this.focusHiddenField()
+    }
+
+    this.setState({
+      activeTagIndex: index
+    })
   }
 
   selectAt(index){
     const props = this.p
     const data = props.data
     const item = data[index]
+
+    if (!item){
+      return
+    }
+
     const selectedId = item[props.idProperty]
+
+    const selectedMap = props.selectedMap
+
+    if (hasOwn(selectedMap, selectedId)){
+      //selection already exists
+      return
+    }
 
     const value = props.multiSelect?
                   [...props.value, selectedId]:
                   selectedId
 
     const selected = props.multiSelect?
-                      assign({}, props.selectedMap, { [selectedId]: item  }):
+                      [...props.selectedItems, item]:
                       item
 
 
     props.onSelect(item, selected)
+
+    props.onChange(value, item, selected, { add: item })
+
+    if (this.props.value == null){
+      this.setState({
+        value
+      })
+    }
+  }
+
+  removeAt(index, dir){
+
+    if (dir == undefined){
+      dir = 0
+    }
+
+    const props = this.p
+    const value = props.value
+
+    if (clamp(index, 0, value.length - 1) != index){
+      return
+    }
+
+    const item = props.selectedMap[value[index]]
+
+    const newValue = [
+      ...value.slice(0, index),
+      ...value.slice(index + 1)
+    ]
+
+    const dataMap = this.state.dataMap
+    const selected = newValue.map(id => dataMap[id]).filter(x => !!x)
+
+    props.onChange(newValue, item, selected, { remove: item })
+
+    if (this.props.value == null){
+      this.setState({
+        value: newValue
+      })
+    }
+
+    if (value.length && (index === value.length - 1 || index === 0)){
+      this.setActiveTag(
+        index === value.length - 1?
+          index - 1:
+          0
+      )
+    } else {
+      this.setActiveTag(index + dir)
+    }
+
   }
 
   prepareProps(thisProps){
@@ -147,14 +314,10 @@ export default class Combo extends Component {
 
     this.prepareListProps(props)
 
-    props.value = props.value == null? this.state.value: props.value
-
-    if (Array.isArray(props.value)){
-      props.multiSelect = true
-    }
-
     this.prepareValue(props)
 
+    props.activeTagIndex = this.state.activeTagIndex
+    props.text = this.state.text
     props.focused = this.state.focused
     props.expanded = this.state.expanded
 
@@ -177,38 +340,41 @@ export default class Combo extends Component {
   }
 
   prepareValue(props){
-    const value = props.multiSelect && !Array.isArray(props.value)?
-                  [props.value]:
-                  props.value
+
+    let value = props.value == null? this.state.value: props.value
+
+    if (Array.isArray(value)){
+      props.multiSelect = true
+    }
+
+    value = value != null && !Array.isArray(value)?
+                  [value]:
+                  value
 
     const dataMap = this.state.dataMap
     const displayProperty = props.displayProperty
+
     const selectedMap = {}
+    const selectedItems = value.map(id => {
+                            const item = dataMap[id]
+                            if (item){
+                              selectedMap[id] = item
+                            }
+                            return item
+                          }).filter(x => !!x)
 
-    let displayValue = props.displayValue
 
-    if (displayValue == null){
-      displayValue = props.multiSelect?
-                      value.map(id => {
-                        const item = dataMap[id]
-                        if (item){
-                          selectedMap[id] = item
-                          return item[displayProperty]
-                        }
-                      }):
-                      dataMap[value] && dataMap[value][displayProperty]
-    }
-
+    props.selectedItems = selectedItems
     props.selectedMap = selectedMap
     props.value = value
-    props.displayValue = displayValue
+
   }
 
   prepareListProps(props){
     const listChildren = React.Children.toArray(props.children).filter(c => c && c.props && c.props.isComboList)
     const childList = listChildren[0]
 
-    props.data = this.state.data
+    props.data = this.getData()
     props.loading = !!this.state.loading
 
     if (childList){
@@ -226,6 +392,16 @@ export default class Combo extends Component {
 
     input.focus()
   }
+
+  focusHiddenField(){
+    if (!this.hiddenField){
+      return
+    }
+
+    const input = findDOMNode(this.hiddenField)
+
+    input.focus()
+  }
 }
 
 assign(
@@ -240,7 +416,19 @@ Combo.defaultProps = {
   onBlur: () => {},
 
   onNavigate: (index) => {},
-  onSelect: (item, selection) => {},
+  onSelect: (item, selectedItems) => {},
+  onChange: () => {},
+
+  onItemClick: (item, id, index) => {},
+  onItemMouseEnter: (item, id, index) => {},
+
+  filter: (value, array, props) => {
+    const displayProperty = props.displayProperty
+
+    return array.filter(item => {
+      return item[displayProperty].indexOf(value) != -1
+    })
+  },
 
   expandOnFocus: true,
   dropdown: false,
