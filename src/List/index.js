@@ -38,6 +38,7 @@ export default class List extends Component {
     const className = join(
       props.className,
       'react-combo__list',
+      'react-combo__list--' + props.listPosition,
       props.loading && 'react-combo__list--loading',
       !data.length && 'react-combo__list--empty'
     )
@@ -79,7 +80,7 @@ export default class List extends Component {
     const domNode = findDOMNode(this)
     const row = domNode? domNode.children[index]: null
 
-    scrollToRowIfNeeded(domNode, direction)
+    scrollToRowIfNeeded(row, direction)
   }
 
   renderItem(item, index){
@@ -92,7 +93,7 @@ export default class List extends Component {
       selected,
       current: index === this.p.currentIndex,
       displayProperty: this.props.displayProperty,
-      onClick: this.onItemClick.bind(this, item, id, index),
+      onMouseDown: this.onItemMouseDown.bind(this, item, id, index),
       onMouseEnter: this.onItemMouseEnter.bind(this, item, id, index),
       renderItem: this.props.renderItem
     }
@@ -100,8 +101,8 @@ export default class List extends Component {
     return <Item {...itemProps} />
   }
 
-  onItemClick(item, id, index, event){
-    this.props.onItemClick(item, id, index, event)
+  onItemMouseDown(item, id, index, event){
+    this.props.onItemMouseDown(item, id, index, event)
   }
 
   onItemMouseEnter(item, id, index, event){
@@ -110,10 +111,10 @@ export default class List extends Component {
 }
 
 List.defaultProps = {
-  listPosition: 'top',
+  listPosition: 'bottom',
   isComboList: true,
 
-  onItemClick: () => {},
+  onItemMouseDown: () => {},
   onItemMouseEnter: () => {},
 
   emptyText: 'Nothing to display.',

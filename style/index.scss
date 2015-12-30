@@ -13,9 +13,12 @@
   }
 
   cursor: text;
-}
 
-.react-combo__wrapper {
+
+  &.react-combo--focused {
+    // box-shadow: $shadow;
+  }
+
   display: inline-flex;
   flex-flow: row;
   flex: 1;
@@ -44,19 +47,5 @@
 }
 
 @import './tag';
-
-&.react-combo--focused {
-  box-shadow: $shadow;
-  .react-combo__wrapper {
-    border: 1px solid $gray;
-  }
-}
-
-&.react-combo--expanded {
-  .react-combo__wrapper {
-
-  }
-}
-
 @import './list';
 @import './expand-tool';

@@ -23,7 +23,7 @@ const renderList = function(props) {
     renderItem: props.renderItem,
     listPosition: props.listPosition,
     selectedMap: props.selectedMap,
-    onItemClick: this.onItemClick,
+    onItemMouseDown: this.onItemMouseDown,
     onItemMouseEnter: this.onItemMouseEnter
   }
 
@@ -44,10 +44,12 @@ const renderList = function(props) {
   return list
 }
 
-const onItemClick = function(item, id, index) {
+const onItemMouseDown = function(item, id, index, event) {
+  event.preventDefault()
+
   this.selectAt(index)
 
-  this.props.onItemClick(item, id, index)
+  this.props.onItemMouseDown(item, id, index)
 }
 
 const onItemMouseEnter = function(item, id, index) {
@@ -60,6 +62,6 @@ const onItemMouseEnter = function(item, id, index) {
 
 export default {
   renderList,
-  onItemClick,
+  onItemMouseDown,
   onItemMouseEnter
 }

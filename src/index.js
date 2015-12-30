@@ -153,22 +153,19 @@ export default class Combo extends Component {
 
     return <div
       {...props}
-      style={null}
       data={null}
       tabIndex={this.state.focused? -1: this.props.tabIndex || 0}
       onFocus={this.onFocus}
     >
-      <div className="react-combo__wrapper" style={props.style}>
-        {tags}
-        {hidden}
-        <ExpandTool
-          onExpandChange={this.onExpandChange}
-          focused={this.state.focused}
-          expanded={expanded}
-          loading={loading}
-        />
-        {list}
-      </div>
+      {tags}
+      {hidden}
+      <ExpandTool
+        onExpandChange={this.onExpandChange}
+        focused={this.state.focused}
+        expanded={expanded}
+        loading={loading}
+      />
+      {list}
     </div>
   }
 
@@ -378,6 +375,7 @@ export default class Combo extends Component {
     props.className = join(
       'react-combo',
       props.className,
+      'react-combo--list-' + props.listPosition,
       props.focused && join(props.focusedClassName, 'react-combo--focused'),
       props.expanded && join(props.expandedClassName, 'react-combo--expanded')
     )
@@ -465,7 +463,7 @@ Combo.defaultProps = {
   onSelect: (item, selectedItems) => {},
   onChange: () => {},
 
-  onItemClick: (item, id, index) => {},
+  onItemMouseDown: (item, id, index) => {},
   onItemMouseEnter: (item, id, index) => {},
 
   filter: (value, array, props) => {
@@ -484,6 +482,7 @@ Combo.defaultProps = {
 
   idProperty: 'id',
   displayProperty: 'label',
-  disabledProperty: 'disabled'
+  disabledProperty: 'disabled',
+  listPosition: 'bottom'
 }
 

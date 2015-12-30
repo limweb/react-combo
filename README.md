@@ -10,6 +10,53 @@ react-combo
 $ npm i --save react-combo
 ```
 
+## Usage
+
+```jsx
+
+import Combo from 'react-combo'
+import 'react-combo/index.css'
+
+const data = [
+  { id: 1, label: 'First option' },
+  { id: 2, label: 'Second' },
+  { id: 3, label: 'Third' },
+  { id: 4, label: 'Forth' }
+]
+
+<Combo
+  data={data}
+  idProperty="id"
+  displayProperty="label"
+  defaultValue={[1,2]}
+/>
+```
+
+```jsx
+import Combo, { List } from 'react-combo'
+import 'react-combo/index.css'
+
+
+<Combo
+  data={data}
+  idProperty="id"
+  displayProperty="label"
+  defaultValue={[1,2]}
+>
+  <List
+    emptyText="No items here"
+    loadingText={<span>loading</span>}
+    listPosition="top"
+  />
+</Combo>
+```
+
+DON'T forget to import the styles from `react-combo/index.css`
+
+## Behavior
+
+Selected options can be navigated to with arrow keys and removed with `Delete` or `Backspace` or with click on remove icon.
+
 ## Properties
 
  * `dataSource: Array|Promise(Array)` - an array of items, or a promise resolving to an array.
