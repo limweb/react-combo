@@ -9,15 +9,18 @@ const renderList = function(props) {
 
   const expanded = this.state.expanded
   const currentIndex = this.state.currentIndex
+  const loading = this.state.loading
 
   const listProps = {
     visible: expanded,
     expanded,
+    loading,
     currentIndex,
     data: props.data,
     idProperty: props.idProperty,
     displayProperty: props.displayProperty,
     disabledProperty: props.disabledProperty,
+    renderItem: props.renderItem,
     listPosition: props.listPosition,
     selectedMap: props.selectedMap,
     onItemClick: this.onItemClick,

@@ -18,4 +18,15 @@
   border-bottom: 0px;
 }
 
+.react-combo__list--empty,
+.react-combo__list--loading {
+  padding: 10px 20px;
+  display: flex;
+  flex-flow: row;
+  justify-content: center;
+  font-style: italic;
+  color: gray;
+  text-align: center;
+}
+
 @import './list-item'

@@ -6,6 +6,8 @@ import assign from 'object-assign'
 import Field from 'react-field'
 import hasOwn from 'hasown'
 
+import InlineBlock from 'react-inline-block'
+
 import ExpandTool from './ExpandTool'
 
 import join from './join'
@@ -76,9 +78,18 @@ export default class Combo extends Component {
     this.setState({
       text: value
     })
+
+    this.filterList(value)
   }
 
   filterList(value){
+    if (value === ''){
+      return this.setState({
+        filterValue: '',
+        filterData: undefined
+      })
+    }
+
     this.setState({
       filterValue: value,
       filterData: this.getFilteredData(value)
@@ -136,7 +147,6 @@ export default class Combo extends Component {
 
     const list = this.renderList(props)
     const tags = this.renderTags(props)
-    const field = this.renderField(props)
     const hidden = this.renderHiddenField(props)
 
     const loading = this.p.loading
@@ -150,7 +160,6 @@ export default class Combo extends Component {
     >
       <div className="react-combo__wrapper" style={props.style}>
         {tags}
-        {field}
         {hidden}
         <ExpandTool
           onExpandChange={this.onExpandChange}
@@ -164,7 +173,12 @@ export default class Combo extends Component {
   }
 
   renderTags(props) {
-    const tags = props.selectedItems.map(this.renderItemTag)
+    const field = this.renderField(props)
+
+    const tags = [
+      props.selectedItems.map(this.renderItemTag),
+      field
+    ]
 
     return <div className="react-combo__value-tags" children={tags} />
   }
@@ -179,6 +193,15 @@ export default class Combo extends Component {
     const label = item[displayProperty]
     const active = index === props.activeTagIndex
 
+    const clearTool = props.tagClearTool === false || props.tagClearTool == null?
+                        null:
+                        <div
+                        key="clearTool"
+                        onClick={this.removeAt.bind(this, index)}
+                        className="react-combo__value-tag-clear">
+                        {props.tagClearTool}
+                      </div>
+
     const tagProps = {
       key: id,
       onMouseDown: this.onTagMouseDown.bind(this, item, index),
@@ -186,10 +209,22 @@ export default class Combo extends Component {
       item: item,
       idProperty,
       displayProperty,
-      children: label
+      children: [
+        clearTool,
+        <InlineBlock key="label" className="react-combo__value-tag-label">{label}</InlineBlock>
+      ]
     }
 
-    return <div {...tagProps} />
+    let result
+    if (props.renderTag){
+      result = props.renderTag(tagProps)
+    }
+
+    if (result === undefined){
+      result = <div {...tagProps} />
+    }
+
+    return result
   }
 
   onTagMouseDown(item, index, event){
@@ -207,11 +242,22 @@ export default class Combo extends Component {
   }
 
   onFocus(event){
+    if (this.state.focused){
+      return
+    }
+
     if (event.target == findDOMNode(this.hiddenField)){
       return
     }
 
+    // console.log('onfocus', new Date())
+    // this.props.onFocus()
+
     this.focusField()
+  }
+
+  onBlur(){
+    this.props.onBlur()
   }
 
   setActiveTag(index){
@@ -382,7 +428,7 @@ export default class Combo extends Component {
       props.idProperty = childList.props.idProperty || props.idProperty
       props.displayProperty = childList.props.displayProperty || props.displayProperty
       props.listPosition = childList.props.listPosition || props.listPosition
-
+      props.renderItem = childList.props.renderItem || props.renderItem
       props.childList = childList
     }
   }
@@ -429,6 +475,9 @@ Combo.defaultProps = {
       return item[displayProperty].indexOf(value) != -1
     })
   },
+
+  forceSelect: true,
+  tagClearTool: '⊗',
 
   expandOnFocus: true,
   dropdown: false,

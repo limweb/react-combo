@@ -1,4 +1,8 @@
 export default (row, dir) => {
+  if (!row){
+    return false
+  }
+
   const parentNode = row.parentNode
 
   const scrollTop = parentNode.scrollTop

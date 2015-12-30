@@ -1,0 +1,49 @@
+@import './variables';
+
+.react-combo__value-tags {
+  display: inline-block;
+}
+
+.react-combo__value-tag {
+  margin: 2px;
+  display: inline-flex;
+  flex-flow: row;
+  align-items: stretch;
+  border: 1px solid $gray;
+}
+.react-combo__value-tag-label {
+  display: inline-block;
+  padding: 3px 5px;
+}
+
+.react-combo__value-tag-clear {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  padding: 2px;
+  border-right: 1px solid $gray;
+  cursor: pointer;
+
+  &:hover {
+    background: gray;
+    color: white;
+  }
+}
+
+.react-combo__value-tag--active {
+  background: $gray;
+  color: white;
+  border-color: gray;
+}
+
+.react-combo__value-tag--active .react-combo__value-tag-clear {
+  border-right-color: gray;
+}
+
+.react-combo__value-tag + .react-combo__value-tag {
+  margin-left: 5px;
+}
+
+.react-combo__value-tag:last-child {
+  margin-right: 5px;
+}

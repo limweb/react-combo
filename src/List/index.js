@@ -37,12 +37,32 @@ export default class List extends Component {
 
     const className = join(
       props.className,
-      'react-combo__list'
+      'react-combo__list',
+      props.loading && 'react-combo__list--loading',
+      !data.length && 'react-combo__list--empty'
     )
 
     return <ul {...props} data={null} className={className}>
       {data.map(this.renderItem)}
+      {this.renderEmptyText()}
+      {this.renderLoadingText()}
     </ul>
+  }
+
+  renderEmptyText(){
+    if (this.props.data.length || this.props.loading){
+      return null
+    }
+
+    return this.props.emptyText
+  }
+
+  renderLoadingText(){
+    if (!this.props.loading){
+      return null
+    }
+
+    return this.props.loadingText
   }
 
   componentDidUpdate(prevProps){
@@ -56,7 +76,8 @@ export default class List extends Component {
   }
 
   scrollToRow(index, direction){
-    const domNode = findDOMNode(this).children[index]
+    const domNode = findDOMNode(this)
+    const row = domNode? domNode.children[index]: null
 
     scrollToRowIfNeeded(domNode, direction)
   }
@@ -65,15 +86,18 @@ export default class List extends Component {
     const id = item[this.props.idProperty]
     const selected = hasOwn(this.props.selectedMap, id)
 
-    return <Item
-      key={id}
-      data={item}
-      selected={selected}
-      current={index === this.p.currentIndex}
-      displayProperty={this.props.displayProperty}
-      onClick={this.onItemClick.bind(this, item, id, index)}
-      onMouseEnter={this.onItemMouseEnter.bind(this, item, id, index)}
-    />
+    const itemProps = {
+      key: id,
+      data: item,
+      selected,
+      current: index === this.p.currentIndex,
+      displayProperty: this.props.displayProperty,
+      onClick: this.onItemClick.bind(this, item, id, index),
+      onMouseEnter: this.onItemMouseEnter.bind(this, item, id, index),
+      renderItem: this.props.renderItem
+    }
+
+    return <Item {...itemProps} />
   }
 
   onItemClick(item, id, index, event){
@@ -90,7 +114,10 @@ List.defaultProps = {
   isComboList: true,
 
   onItemClick: () => {},
-  onItemMouseEnter: () => {}
+  onItemMouseEnter: () => {},
+
+  emptyText: 'Nothing to display.',
+  loadingText: 'Loading...'
 }
 
 List.propTypes = {
@@ -98,5 +125,7 @@ List.propTypes = {
   displayProperty: PropTypes.string,
   disabledProperty: PropTypes.string,
   visible: PropTypes.bool,
-  data: PropTypes.array
+  data: PropTypes.array,
+  emptyText: PropTypes.node,
+  loadingText: PropTypes.node
 }

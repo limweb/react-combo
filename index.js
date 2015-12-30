@@ -22,22 +22,18 @@ const dataSource = new Promise((resolve, reject) => {
 
 
 function renderItem(props){
-  return <li {...props}>{props.item.label}!</li>
+  return <li {...props}>{props.data.lastName}!</li>
 }
 
 class App extends Component {
   render(){
     return <div className="App" style={{padding: 10, height: 400}}>
-      <input type="text" defaultValue="a" />
+      <input type="text" defaultValue="a test input" />
 
-      <Combo renderItem={renderItem} displayProperty="lastName" defaultValue={[4,7, 9, 12]} dataSource={data} focusedClassName="focused">
-        <List
-
-          currentIndex={1}
-        />
+      <Combo renderItem={renderItem} displayProperty="lastName" defaultValue={[4,7, 9, 12]} dataSource={dataSource} focusedClassName="focused">
       </Combo>
 
-      <input type="text" defaultValue="b" />
+      <input type="text" defaultValue="second input" />
     </div>
   }
 }

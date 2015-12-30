@@ -4,7 +4,7 @@
   display: inline-flex;
   flex-flow: row;
   position: relative;
-
+  vertical-align: middle;
 
   box-sizing: border-box;
 
@@ -43,28 +43,7 @@
   left: 100000px;
 }
 
-.react-combo__value-tags {
-  display: inline-block;
-}
-
-.react-combo__value-tag {
-  padding: 3px 5px;
-  margin: 2px;
-  display: inline-block;
-  border: 1px solid $gray;
-}
-.react-combo__value-tag--active {
-  background: $gray;
-  color: white;
-}
-
-.react-combo__value-tag + .react-combo__value-tag {
-  margin-left: 5px;
-}
-
-.react-combo__value-tag:last-child {
-  margin-right: 5px;
-}
+@import './tag';
 
 &.react-combo--focused {
   box-shadow: $shadow;

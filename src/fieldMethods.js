@@ -49,9 +49,14 @@ const renderField = function(props) {
 }
 
 const onFieldFocus = function(event) {
+
   this.setState({
     focused: true
   })
+
+  if (this.state.focused){
+    return
+  }
 
   if (this.props.expandOnFocus && !this.state.expanded){
     this.toggleList()
@@ -59,9 +64,6 @@ const onFieldFocus = function(event) {
 
   this.props.onFocus(event)
 
-  if (this.props.fieldProps && this.props.fieldProps.onFocus){
-    this.props.fieldProps.onFocus(event)
-  }
 }
 
 const onFieldBlur = function(event){
@@ -72,17 +74,19 @@ const onFieldBlur = function(event){
       return
     }
 
-    this.props.onBlur(event)
+    this.setState({
+      activeTagIndex: -1
+    })
 
-    if (this.props.fieldProps && this.props.fieldProps.onBlur){
-      this.props.fieldProps.onBlur(event)
+    console.log('blur!!!')
+
+    this.props.forceSelect && this.setText('')
+    this.onBlur(event)
+
+    if (this.state.expanded){
+      this.toggleList()
     }
   })
-
-  if (this.state.expanded){
-    // this.toggleList()
-  }
-
 }
 
 const onFieldKeyDown = function(event){
@@ -107,6 +111,10 @@ const onFieldKeyDown = function(event){
   if (event.key == 'Enter'){
     this.selectAt(this.p.currentIndex)
     this.navigate(1)//go to next item
+  }
+
+  if (event.key == 'Escape' && this.state.expanded){
+    return this.toggleList()
   }
 
   if (!props.multiSelect) {
@@ -140,7 +148,7 @@ const onFieldKeyDown = function(event){
     textToRight = text.substring(selectionEnd)
   }
 
-  if ((key == 'Backspace' || key == 'ArrowLeft') || textToLeft === ''){
+  if ((key == 'Backspace' || key == 'ArrowLeft') && textToLeft === ''){
     //if there is no other character at the left of the cursor
     //go to the tag before the cursor
     if (index == -1){
@@ -186,7 +194,10 @@ const navigate = function (dir) {
 }
 
 const onFieldChange = function (value) {
-  this.filterList(value)
+
+  if (!this.state.expanded){
+    this.toggleList()
+  }
 
   this.setText(value)
 }
@@ -201,11 +212,13 @@ const renderHiddenField = function(props){
   }
 
   return <input
+    tabIndex={-1}
     ref={(f) => this.hiddenField = f}
     key="hiddenFocusField"
     type="text"
     className="react-combo__hidden-field"
     onFocus={this.onHiddenFieldFocus}
+    onBlur={this.onHiddenFieldBlur}
     onKeyDown={this.onHiddenFieldKeyDown}
   />
 }
@@ -216,6 +229,10 @@ const onHiddenFieldFocus = function(){
   this.setState({
     focused: true
   })
+}
+
+const onHiddenFieldBlur = function(event){
+  this.onFieldBlur(event)
 }
 
 const onHiddenFieldKeyDown = function(event){
@@ -275,6 +292,7 @@ export default {
   navigate,
   renderHiddenField,
   onHiddenFieldFocus,
+  onHiddenFieldBlur,
   onHiddenFieldKeyDown,
   getSelectionStart(){
     return getSelectionStart(findDOMNode(this.field))
