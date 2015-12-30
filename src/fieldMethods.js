@@ -23,7 +23,7 @@ const renderField = function(props) {
   })
 
   if (props.dropdown){
-    fieldProps.readOnly = true
+    // fieldProps.readOnly = true
   }
 
   fieldProps.className = join(
@@ -78,8 +78,6 @@ const onFieldBlur = function(event){
       activeTagIndex: -1
     })
 
-    console.log('blur!!!')
-
     this.props.forceSelect && this.setText('')
     this.onBlur(event)
 
@@ -110,15 +108,17 @@ const onFieldKeyDown = function(event){
 
   if (event.key == 'Enter'){
     this.selectAt(this.p.currentIndex)
-    this.navigate(1)//go to next item
+
+    if (props.multiSelect){
+      prop.gotoNextOnSelect && this.navigate(1)//go to next item
+    } else {
+      this.props.forceSelect && this.setText('')
+      this.toggleList()
+    }
   }
 
   if (event.key == 'Escape' && this.state.expanded){
     return this.toggleList()
-  }
-
-  if (!props.multiSelect) {
-    return
   }
 
   //now deal with navigation between tags
@@ -207,9 +207,9 @@ const toggleList = function(){
 }
 
 const renderHiddenField = function(props){
-  if (!props.multiSelect){
-    return null
-  }
+  // if (!props.multiSelect){
+  //   return null
+  // }
 
   return <input
     tabIndex={-1}

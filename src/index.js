@@ -228,6 +228,11 @@ export default class Combo extends Component {
     event.preventDefault()
 
     this.setActiveTag(index)
+
+
+    // if (!this.state.focused){
+    //   this.focusHiddenField()
+    // }
   }
 
   onExpandChange(value){
@@ -246,9 +251,6 @@ export default class Combo extends Component {
     if (event.target == findDOMNode(this.hiddenField)){
       return
     }
-
-    // console.log('onfocus', new Date())
-    // this.props.onFocus()
 
     this.focusField()
   }
@@ -387,7 +389,11 @@ export default class Combo extends Component {
 
     let value = props.value == null? this.state.value: props.value
 
-    if (Array.isArray(value)){
+    if (props.dropdown){
+      props.multiSelect = false
+    }
+
+    if (Array.isArray(value) && props.multiSelect == null){
       props.multiSelect = true
     }
 
@@ -474,6 +480,7 @@ Combo.defaultProps = {
     })
   },
 
+  gotoNextOnSelect: true,
   forceSelect: true,
   tagClearTool: '⊗',
 

@@ -67,6 +67,7 @@ Selected options can be navigated to with arrow keys and removed with `Delete` o
  * `renderItem(props)` - a function that can be used to customize how an item is rendered. If you return a React Node, the node will be rendered. If instead you only modify the props passed into this fn and return undefined, those props will be reflected on the default renderItem implementation
  * `renderTag(props)` - a function that can be used to customize how a selected item is rendered in the combo.
  * `tagClearTool` - specify false or null if you don't want to render a clear icon for selected items/tags.  
+ * `gotoNextOnSelect` - defaults to true. If the combo is a `multiSelect` and this flag is true, when selecting an item, the current index is moved to the next item, so it can be easily selected by pressing the `Enter` key again.
 
  ## Development
 
