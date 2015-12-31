@@ -30,7 +30,7 @@ class App extends Component {
     return <div className="App" style={{padding: 10, marginTop: '60vh', height: 400}}>
       <input type="text" defaultValue="a test input" />
 
-      <Combo multiSelect listPosition="top" renderItem={renderItem} displayProperty="lastName" defaultValue={null} dataSource={data} focusedClassName="focused">
+      <Combo multiSelect listPosition="top" xrenderItem={renderItem} displayProperty="lastName" defaultValue={null} dataSource={data} focusedClassName="focused">
       </Combo>
 
       <input type="text" defaultValue="second input" />
