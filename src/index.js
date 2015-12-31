@@ -173,7 +173,7 @@ export default class Combo extends Component {
     const field = this.renderField(props)
 
     const tags = [
-      props.selectedItems.map(this.renderItemTag),
+      (props.selectedItems || []).map(this.renderItemTag),
       field
     ]
 
@@ -304,7 +304,7 @@ export default class Combo extends Component {
 
     props.onChange(value, item, selected, { add: item })
 
-    if (this.props.value == null){
+    if (this.props.value === undefined){
       this.setState({
         value
       })
@@ -318,7 +318,7 @@ export default class Combo extends Component {
     }
 
     const props = this.p
-    const value = props.value
+    const value = props.value || []
 
     if (clamp(index, 0, value.length - 1) != index){
       return
@@ -332,11 +332,11 @@ export default class Combo extends Component {
     ]
 
     const dataMap = this.state.dataMap
-    const selected = newValue.map(id => dataMap[id]).filter(x => !!x)
+    const selected = (newValue || []).map(id => dataMap[id]).filter(x => !!x)
 
     props.onChange(newValue, item, selected, { remove: item })
 
-    if (this.props.value == null){
+    if (this.props.value === undefined){
       this.setState({
         value: newValue
       })
@@ -387,17 +387,17 @@ export default class Combo extends Component {
 
   prepareValue(props){
 
-    let value = props.value == null? this.state.value: props.value
+    let value = props.value === undefined? this.state.value: props.value
 
     if (props.dropdown){
       props.multiSelect = false
     }
 
-    if (Array.isArray(value) && props.multiSelect == null){
+    if (Array.isArray(value) && props.multiSelect === undefined){
       props.multiSelect = true
     }
 
-    value = value != null && !Array.isArray(value)?
+    value = value !== undefined && !Array.isArray(value)?
                   [value]:
                   value
 
@@ -405,7 +405,7 @@ export default class Combo extends Component {
     const displayProperty = props.displayProperty
 
     const selectedMap = {}
-    const selectedItems = value.map(id => {
+    const selectedItems = (value || []).map(id => {
                             const item = dataMap[id]
                             if (item){
                               selectedMap[id] = item
