@@ -23,7 +23,8 @@ export default class Item extends Component {
     )
 
     props = assign({}, props, {
-      className: className
+      className: className,
+      children: data[props.displayProperty]
     })
 
     let item
