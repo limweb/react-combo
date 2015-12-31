@@ -1,5 +1,6 @@
 import React from 'react'
 import Component from 'react-class'
+import assign from 'object-assign'
 
 import join from '../join'
 
@@ -7,7 +8,7 @@ export default class Item extends Component {
 
   render(){
 
-    const props = this.props;
+    let props = this.props;
     const data = props.data;
 
     const className = join(
@@ -21,9 +22,23 @@ export default class Item extends Component {
           null
     )
 
-    return <li {...props} data={null} className={className}>
-      {data[props.displayProperty]}
-    </li>
+    props = assign({}, props, {
+      className: className,
+      children: data[props.displayProperty]
+    })
+
+    let item
+
+    if (props.renderItem){
+      item = props.renderItem(props)
+    }
+
+    if (item  === undefined){
+      props.data = null
+      item = <li {...props} />
+    }
+
+    return item
   }
 }
 

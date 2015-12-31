@@ -22,7 +22,7 @@ const dataSource = new Promise((resolve, reject) => {
 
 
 function renderItem(props){
-  return <li {...props}>{props.data.lastName}!</li>
+  return <li {...props}>{props.data.lastName}!!!!</li>
 }
 
 class App extends Component {
