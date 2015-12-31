@@ -110,7 +110,7 @@ const onFieldKeyDown = function(event){
     this.selectAt(this.p.currentIndex)
 
     if (props.multiSelect){
-      prop.gotoNextOnSelect && this.navigate(1)//go to next item
+      props.gotoNextOnSelect && this.navigate(1)//go to next item
     } else {
       this.props.forceSelect && this.setText('')
       this.toggleList()
