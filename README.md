@@ -68,6 +68,7 @@ Selected options can be navigated to with arrow keys and removed with `Delete` o
  * `renderTag(props)` - a function that can be used to customize how a selected item is rendered in the combo.
  * `tagClearTool` - specify false or null if you don't want to render a clear icon for selected items/tags.  
  * `gotoNextOnSelect` - defaults to true. If the combo is a `multiSelect` and this flag is true, when selecting an item, the current index is moved to the next item, so it can be easily selected by pressing the `Enter` key again.
+ * `renderExpandTool: Function` - a function to render the expand tool. It receives props for the tool. If you only want to modify the props, you can do so and return undefined. Otherwise, you can return a custom expand tool.
 
  ## Development
 
