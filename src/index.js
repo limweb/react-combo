@@ -160,6 +160,7 @@ export default class Combo extends Component {
       {tags}
       {hidden}
       <ExpandTool
+        renderExpandTool={props.renderExpandTool}
         onExpandChange={this.onExpandChange}
         focused={this.state.focused}
         expanded={expanded}
