@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 import { findDOMNode } from 'react-dom'
 import Component from 'react-class'
 import assign from 'object-assign'
@@ -460,6 +460,10 @@ assign(
   fieldMethods,
   listMethods
 );
+
+Combo.propTypes = {
+  renderExpandTool: PropTypes.func
+}
 
 Combo.defaultProps = {
   onExpandChange: () => {},

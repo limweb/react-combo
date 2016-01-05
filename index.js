@@ -25,12 +25,17 @@ function renderItem(props){
   return <li {...props}>{props.data.lastName}!!!!</li>
 }
 
+const tool = (props) => {
+  props.children = props.expanded? 'a':'b'
+
+}
+
 class App extends Component {
   render(){
     return <div className="App" style={{padding: 10, marginTop: '60vh', height: 400}}>
       <input type="text" defaultValue="a test input" />
 
-      <Combo multiSelect listPosition="top" xrenderItem={renderItem} displayProperty="lastName" defaultValue={null} dataSource={data} focusedClassName="focused">
+      <Combo multiSelect renderExpandTool={tool} listPosition="top" xrenderItem={renderItem} displayProperty="lastName" defaultValue={null} dataSource={data} focusedClassName="focused">
       </Combo>
 
       <input type="text" defaultValue="second input" />

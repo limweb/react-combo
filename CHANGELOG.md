@@ -1,6 +1,9 @@
 react-combo
 ===========
 
+#### 0.2.7
+ * add `renderExpandTool` prop
+ 
 #### 0.2.6
  * fix list rendering
  
