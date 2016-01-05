@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react'
 import Component from 'react-class'
+import assign from 'object-assign'
 
 const DOWN = '▼'
 const UP = '▲'
@@ -8,14 +9,25 @@ export default class ExpandTool extends Component {
 
   render(){
     const props = this.props
-
-    return <div
-      {...props}
-      className="react-combo__expand-tool"
-      onMouseDown={this.onMouseDown}
-    >
-      {props.expanded? UP: DOWN}
-    </div>
+    
+    const toolProps = assign({}, props, {
+      className: 'react-combo__expand-tool',
+      onMouseDown: this.onMouseDown,
+      children: props.expanded? UP: DOWN,
+      expanded: props.expanded
+    })
+    
+    const renderExpandTool = props.renderExpandTool
+    
+    let result
+    
+    if (renderExpandTool){
+      result = renderExpandTool(toolProps)
+    }
+    if (result === undefined){
+      result = <div {...toolProps} />
+    }
+    return result
   }
 
   onMouseDown(event){
