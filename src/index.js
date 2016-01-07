@@ -27,7 +27,7 @@ export default class Combo extends Component {
 
     this.state = {
       focused: false,
-      expanded: false,
+      expanded: props.defaultExpanded || false,
       currentIndex: props.currentIndex,
       value: props.defaultValue,
       data: [],
@@ -143,8 +143,8 @@ export default class Combo extends Component {
 
   render(){
     const props = this.p = this.prepareProps(this.props)
-    const expanded = this.state.expanded
-
+    const expanded = props.expanded
+    
     const list = this.renderList(props)
     const tags = this.renderTags(props)
     const hidden = this.renderHiddenField(props)
@@ -365,7 +365,7 @@ export default class Combo extends Component {
     props.activeTagIndex = this.state.activeTagIndex
     props.text = this.state.text
     props.focused = this.state.focused
-    props.expanded = this.state.expanded
+    props.expanded = props.expanded === undefined? this.state.expanded: props.expanded
 
     let currentIndex = thisProps.currentIndex == null? this.state.currentIndex: thisProps.currentIndex
 
@@ -497,4 +497,3 @@ Combo.defaultProps = {
   disabledProperty: 'disabled',
   listPosition: 'bottom'
 }
-
