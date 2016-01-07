@@ -115,6 +115,8 @@ const onFieldKeyDown = function(event){
       this.props.forceSelect && this.setText('')
       this.toggleList()
     }
+
+    this.setText('') // clear input text onEnter
   }
 
   if (event.key == 'Escape' && this.p.expanded){
