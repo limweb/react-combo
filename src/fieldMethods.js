@@ -58,7 +58,7 @@ const onFieldFocus = function(event) {
     return
   }
 
-  if (this.props.expandOnFocus && !this.state.expanded){
+  if (this.props.expandOnFocus && !this.p.expanded){
     this.toggleList()
   }
 
@@ -81,7 +81,7 @@ const onFieldBlur = function(event){
     this.props.forceSelect && this.setText('')
     this.onBlur(event)
 
-    if (this.state.expanded){
+    if (this.p.expanded){
       this.toggleList()
     }
   })
@@ -99,7 +99,7 @@ const onFieldKeyDown = function(event){
     event.preventDefault()
   }
 
-  if (!this.state.expanded && arrow){
+  if (!this.p.expanded && arrow){
     return this.toggleList()
   }
 
@@ -117,7 +117,7 @@ const onFieldKeyDown = function(event){
     }
   }
 
-  if (event.key == 'Escape' && this.state.expanded){
+  if (event.key == 'Escape' && this.p.expanded){
     return this.toggleList()
   }
 
@@ -195,7 +195,7 @@ const navigate = function (dir) {
 
 const onFieldChange = function (value) {
 
-  if (!this.state.expanded){
+  if (!this.p.expanded){
     this.toggleList()
   }
 
@@ -203,7 +203,7 @@ const onFieldChange = function (value) {
 }
 
 const toggleList = function(){
-  this.onExpandChange(!this.state.expanded)
+  this.onExpandChange(!this.p.expanded)
 }
 
 const renderHiddenField = function(props){

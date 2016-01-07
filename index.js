@@ -34,8 +34,13 @@ class App extends Component {
   render(){
     return <div className="App" style={{padding: 10, marginTop: '60vh', height: 400}}>
       <input type="text" defaultValue="a test input" />
-
-      <Combo multiSelect renderExpandTool={tool} listPosition="top" xrenderItem={renderItem} displayProperty="lastName" defaultValue={null} dataSource={data} focusedClassName="focused">
+      <Combo
+        multiSelect
+        renderExpandTool={tool}
+        displayProperty="lastName"
+        defaultValue={null}
+        dataSource={data}
+      >
       </Combo>
 
       <input type="text" defaultValue="second input" />

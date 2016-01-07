@@ -144,7 +144,7 @@ export default class Combo extends Component {
   render(){
     const props = this.p = this.prepareProps(this.props)
     const expanded = props.expanded
-    
+
     const list = this.renderList(props)
     const tags = this.renderTags(props)
     const hidden = this.renderHiddenField(props)
@@ -237,11 +237,17 @@ export default class Combo extends Component {
   }
 
   onExpandChange(value){
-    this.setState({
-      expanded: value
-    })
+    if (this.props.expanded === undefined){
+      this.setState({
+        expanded: value
+      })
+    }
 
     this.props.onExpandChange(value)
+  }
+
+  isExpanded(){
+    return this.p.expanded
   }
 
   onFocus(event){
