@@ -7,9 +7,11 @@ import join from './join'
 
 const renderList = function(props) {
 
-  const expanded = this.state.expanded
+  const expanded = props.expanded
   const currentIndex = this.state.currentIndex
   const loading = this.state.loading
+
+
 
   const listProps = {
     visible: expanded,

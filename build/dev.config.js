@@ -9,6 +9,7 @@ var definePlugin = new webpack.DefinePlugin({
 });
 
 module.exports = {
+  watchPoll: true,
   entry: [
     'webpack-dev-server/client?http://localhost:' + PORT,
     'webpack/hot/only-dev-server',
