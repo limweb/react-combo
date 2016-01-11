@@ -107,12 +107,12 @@ const onFieldKeyDown = function(event){
   arrowUp && this.navigate(-1)
 
   if (event.key == 'Enter'){
-    this.selectAt(this.p.currentIndex)
+    this.trySelectAt(this.p.currentIndex)
 
     if (props.multiSelect){
       props.gotoNextOnSelect && this.navigate(1)//go to next item
     } else {
-      this.props.forceSelect && this.setText('')
+      this.props.forceSelect && !props.clearTextOnSelect && this.setText('')
       this.toggleList()
     }
   }

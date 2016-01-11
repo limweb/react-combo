@@ -30,15 +30,27 @@ const tool = (props) => {
 
 }
 
+const renderTag = (props) => {
+}
+
+let value = null
+
 class App extends Component {
+  onChange(v){
+    value = v
+    this.setState({})
+  }
   render(){
-    return <div className="App" style={{padding: 10, marginTop: '60vh', height: 400}}>
+    return <div className="App" style={{padding: 10, marginTop: '6vh', height: 40}}>
       <input type="text" defaultValue="a test input" />
+      {JSON.stringify(value)}
       <Combo
+        renderTag={renderTag}
         multiSelect
         renderExpandTool={tool}
         displayProperty="lastName"
-        defaultValue={null}
+        defaultValue={value}
+        onChange={this.onChange}
         dataSource={data}
       >
       </Combo>
@@ -49,3 +61,4 @@ class App extends Component {
 }
 
 render(<App />, document.getElementById('content'))
+

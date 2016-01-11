@@ -71,6 +71,12 @@ Selected options can be navigated to with arrow keys and removed with `Delete` o
  * `tagClearTool` - specify false or null if you don't want to render a clear icon for selected items/tags.  
  * `gotoNextOnSelect` - defaults to true. If the combo is a `multiSelect` and this flag is true, when selecting an item, the current index is moved to the next item, so it can be easily selected by pressing the `Enter` key again.
  * `renderExpandTool: Function` - a function to render the expand tool. It receives props for the tool. If you only want to modify the props, you can do so and return undefined. Otherwise, you can return a custom expand tool.
+ * `toggleSelection: Boolean` - defaults to true. When clicking an already selected item, it is deselected
+ * `clearTextOnSelect: Boolean` - defaults to true. When you filter for an item, and then select one, the text is cleared.
+ * `text: String` - the text to show in the filtering input. controlled version of `defaultText`
+ * `defaultText: String`
+ * `onTextChange: Function` - called when text is changed in the filtering input.
+
 
  ## Development
 

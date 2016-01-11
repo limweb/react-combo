@@ -49,7 +49,7 @@ const renderList = function(props) {
 const onItemMouseDown = function(item, id, index, event) {
   event.preventDefault()
 
-  this.selectAt(index)
+  this.trySelectAt(index)
 
   this.props.onItemMouseDown(item, id, index)
 }

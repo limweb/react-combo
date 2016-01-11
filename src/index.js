@@ -33,7 +33,7 @@ export default class Combo extends Component {
       data: [],
       dataMap: {},
       filterValue: '',
-      text: '',
+      text: props.defaultText || '',
       activeTagIndex: -1
     }
   }
@@ -75,9 +75,14 @@ export default class Combo extends Component {
   }
 
   setText(value){
-    this.setState({
-      text: value
-    })
+
+    this.props.onTextChange(value)
+
+    if (this.props.text === undefined){
+      this.setState({
+        text: value
+      })
+    }
 
     this.filterList(value)
   }
@@ -195,7 +200,7 @@ export default class Combo extends Component {
                         null:
                         <div
                         key="clearTool"
-                        onClick={this.removeAt.bind(this, index)}
+                        onMouseDown={this.onClearTagMouseDown.bind(this, index)}
                         className="react-combo__value-tag-clear">
                         {props.tagClearTool}
                       </div>
@@ -225,8 +230,16 @@ export default class Combo extends Component {
     return result
   }
 
+  onClearTagMouseDown(index, event){
+    event.preventDefault()
+    event.stopPropagation()
+
+    this.removeAt(index)
+  }
+
   onTagMouseDown(item, index, event){
     event.preventDefault()
+    event.stopPropagation()
 
     this.setActiveTag(index)
 
@@ -280,6 +293,67 @@ export default class Combo extends Component {
     })
   }
 
+  isSelectedAt(index){
+    const props = this.p
+    const data = props.data
+    const item = data[index]
+
+    if (!item){
+      return false
+    }
+
+    const id = item[props.idProperty]
+    const selectedMap = props.selectedMap
+
+    return hasOwn(selectedMap, id)
+  }
+
+  deselectAt(index){
+    if (!this.isSelectedAt(index)){
+      return
+    }
+
+    const props = this.p
+    const data = props.data
+    const item = data[index]
+
+    const selectedId = item[props.idProperty]
+
+    const idx = props.multiSelect?
+                    props.value.indexOf(selectedId):
+                    -1
+
+    const value = props.multiSelect?
+                    [...props.value.slice(0, idx), ...props.value.slice(idx + 1)]:
+                    null
+
+    const selected = props.multiSelect?
+                      this.getItemsForIds(value):
+                      null
+
+    props.onDeselect(item, selected)
+
+    props.onChange(value, item, selected, { remove: item })
+
+    if (this.props.value === undefined){
+      this.setState({
+        value
+      })
+    }
+  }
+
+  trySelectAt(index){
+    if (this.props.toggleSelection){
+      this.isSelectedAt(index)?
+        this.deselectAt(index):
+        this.selectAt(index)
+
+      return
+    }
+
+    this.selectAt(index)
+  }
+
   selectAt(index){
     const props = this.p
     const data = props.data
@@ -316,6 +390,10 @@ export default class Combo extends Component {
         value
       })
     }
+
+    if (props.clearTextOnSelect){
+      this.setText('')
+    }
   }
 
   removeAt(index, dir){
@@ -349,6 +427,10 @@ export default class Combo extends Component {
       })
     }
 
+    if (props.activeTagIndex == null || props.activeTagIndex == -1){
+      return
+    }
+
     if (value.length && (index === value.length - 1 || index === 0)){
       this.setActiveTag(
         index === value.length - 1?
@@ -369,7 +451,7 @@ export default class Combo extends Component {
     this.prepareValue(props)
 
     props.activeTagIndex = this.state.activeTagIndex
-    props.text = this.state.text
+    props.text = props.text === undefined? this.state.text: props.text
     props.focused = this.state.focused
     props.expanded = props.expanded === undefined? this.state.expanded: props.expanded
 
@@ -405,7 +487,8 @@ export default class Combo extends Component {
     }
 
     value = value !== undefined && !Array.isArray(value)?
-                  [value]:
+                  (value == null? []: [value])
+                  :
                   value
 
     const dataMap = this.state.dataMap
@@ -414,7 +497,7 @@ export default class Combo extends Component {
     const selectedMap = {}
     const selectedItems = (value || []).map(id => {
                             const item = dataMap[id]
-                            if (item){
+                            if (item !== undefined){
                               selectedMap[id] = item
                             }
                             return item
@@ -425,6 +508,12 @@ export default class Combo extends Component {
     props.selectedMap = selectedMap
     props.value = value
 
+  }
+
+  getItemsForIds(ids){
+    const dataMap = this.state.dataMap
+
+    return ids.map(id => dataMap[id]).filter(x => !!x)
   }
 
   prepareListProps(props){
@@ -478,7 +567,9 @@ Combo.defaultProps = {
 
   onNavigate: (index) => {},
   onSelect: (item, selectedItems) => {},
+  onDeselect: (item, selectedItems) => {},
   onChange: () => {},
+  onTextChange: () => {},
 
   onItemMouseDown: (item, id, index) => {},
   onItemMouseEnter: (item, id, index) => {},
@@ -491,6 +582,8 @@ Combo.defaultProps = {
     })
   },
 
+  toggleSelection: true,
+  clearTextOnSelect: true,
   gotoNextOnSelect: true,
   forceSelect: true,
   tagClearTool: '⊗',

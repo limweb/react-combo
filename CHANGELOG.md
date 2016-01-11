@@ -1,6 +1,10 @@
 react-combo
 ===========
 
+#### 0.3.0
+ * add `toggleSelection` to toggle a selected item when it is reselected.
+ * add `clearTextOnSelect` to clear input text when an item is selected.
+
 #### 0.2.10
  * add controlled `expanded` and uncontrolled equivalent `defaultExpanded`
  
