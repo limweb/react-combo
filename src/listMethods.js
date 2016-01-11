@@ -11,14 +11,14 @@ const renderList = function(props) {
   const currentIndex = this.state.currentIndex
   const loading = this.state.loading
 
-
-
   const listProps = {
     visible: expanded,
     expanded,
     loading,
     currentIndex,
     data: props.data,
+    getItemId: this.getItemId,
+    getItemLabel: this.getItemLabel,
     idProperty: props.idProperty,
     displayProperty: props.displayProperty,
     disabledProperty: props.disabledProperty,

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 import Component from 'react-class'
 import assign from 'object-assign'
 
@@ -24,7 +24,7 @@ export default class Item extends Component {
 
     props = assign({}, props, {
       className: className,
-      children: data[props.displayProperty]
+      children: props.children
     })
 
     let item
@@ -35,7 +35,7 @@ export default class Item extends Component {
 
     if (item  === undefined){
       props.data = null
-      item = <li {...props} />
+      item = <li {...props}/>
     }
 
     return item
@@ -43,5 +43,6 @@ export default class Item extends Component {
 }
 
 Item.propTypes = {
-
+  getItemId: PropTypes.func,
+  getItemLabel: PropTypes.func
 }

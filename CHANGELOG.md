@@ -1,6 +1,9 @@
 react-combo
 ===========
 
+#### 0.4.0
+ * add function support for `idProperty` and `displayProperty`
+ 
 #### 0.3.0
  * add `toggleSelection` to toggle a selected item when it is reselected.
  * add `clearTextOnSelect` to clear input text when an item is selected.

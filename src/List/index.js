@@ -84,17 +84,29 @@ export default class List extends Component {
   }
 
   renderItem(item, index){
-    const id = item[this.props.idProperty]
     const selected = hasOwn(this.props.selectedMap, id)
+
+    const getItemId = this.props.getItemId
+    const getItemLabel = this.props.getItemLabel
+
+    const id = getItemId(item)
 
     const itemProps = {
       key: id,
       data: item,
       selected,
       current: index === this.p.currentIndex,
+      children: getItemLabel(item),
+
+      idProperty: this.props.idProperty,
       displayProperty: this.props.displayProperty,
+
+      getItemId: this.props.getItemId.bind(this),
+      getItemLabel: this.props.getItemLabel.bind(this),
+
       onMouseDown: this.onItemMouseDown.bind(this, item, id, index),
       onMouseEnter: this.onItemMouseEnter.bind(this, item, id, index),
+
       renderItem: this.props.renderItem
     }
 
@@ -122,8 +134,8 @@ List.defaultProps = {
 }
 
 List.propTypes = {
-  idProperty: PropTypes.string,
-  displayProperty: PropTypes.string,
+  idProperty: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+  displayProperty: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   disabledProperty: PropTypes.string,
   visible: PropTypes.bool,
   data: PropTypes.array,

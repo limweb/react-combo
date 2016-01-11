@@ -14,6 +14,7 @@ let LEN = 20;
 var initialData = gen(LEN)
 var data = initialData.concat()
 
+console.log(data)
 const dataSource = new Promise((resolve, reject) => {
   setTimeout(() => {
     resolve(data)
@@ -47,12 +48,14 @@ class App extends Component {
       <Combo
         renderTag={renderTag}
         multiSelect
+        expanded
         renderExpandTool={tool}
-        displayProperty="lastName"
         defaultValue={value}
+        idProperty={x=> x.id+'!'}
         onChange={this.onChange}
         dataSource={data}
       >
+        <List displayProperty="email" />
       </Combo>
 
       <input type="text" defaultValue="second input" />

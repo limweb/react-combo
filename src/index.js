@@ -20,6 +20,22 @@ import List from './List'
 
 export { default as List } from './List'
 
+const getItemId = function(item, props){
+  const idProperty = (props || this.p || this.props).idProperty
+
+  return typeof idProperty === 'function'?
+          idProperty(item):
+          item[idProperty]
+}
+
+const getItemLabel = function(item, props){
+  const displayProperty = (props || this.p || this.props).displayProperty
+
+  return typeof displayProperty === 'function'?
+          displayProperty(item):
+          item[displayProperty]
+}
+
 export default class Combo extends Component {
 
   constructor(props){
@@ -131,7 +147,7 @@ export default class Combo extends Component {
     const props = this.p || this.props;
 
     const dataMap = data.reduce((acc, item) => {
-      acc[item[props.idProperty]] = item
+      acc[this.getItemId(item)] = item
       return acc
     }, {})
 
@@ -189,11 +205,8 @@ export default class Combo extends Component {
   renderItemTag(item, index) {
     const props = this.p
 
-    const displayProperty = props.displayProperty
-    const idProperty = props.idProperty
-
-    const id = item[idProperty]
-    const label = item[displayProperty]
+    const id = this.getItemId(item)
+    const label = this.getItemLabel(item)
     const active = index === props.activeTagIndex
 
     const clearTool = props.tagClearTool === false || props.tagClearTool == null?
@@ -210,8 +223,8 @@ export default class Combo extends Component {
       onMouseDown: this.onTagMouseDown.bind(this, item, index),
       className: join('react-combo__value-tag', active? 'react-combo__value-tag--active': null),
       item: item,
-      idProperty,
-      displayProperty,
+      idProperty: props.idProperty,
+      displayProperty: props.displayProperty,
       children: [
         clearTool,
         <InlineBlock key="label" className="react-combo__value-tag-label">{label}</InlineBlock>
@@ -302,7 +315,7 @@ export default class Combo extends Component {
       return false
     }
 
-    const id = item[props.idProperty]
+    const id = this.getItemId(item)
     const selectedMap = props.selectedMap
 
     return hasOwn(selectedMap, id)
@@ -317,7 +330,7 @@ export default class Combo extends Component {
     const data = props.data
     const item = data[index]
 
-    const selectedId = item[props.idProperty]
+    const selectedId = this.getItemId(item)
 
     const idx = props.multiSelect?
                     props.value.indexOf(selectedId):
@@ -363,7 +376,7 @@ export default class Combo extends Component {
       return
     }
 
-    const selectedId = item[props.idProperty]
+    const selectedId = this.getItemId(item)
 
     const selectedMap = props.selectedMap
 
@@ -492,7 +505,6 @@ export default class Combo extends Component {
                   value
 
     const dataMap = this.state.dataMap
-    const displayProperty = props.displayProperty
 
     const selectedMap = {}
     const selectedItems = (value || []).map(id => {
@@ -553,7 +565,11 @@ export default class Combo extends Component {
 assign(
   Combo.prototype,
   fieldMethods,
-  listMethods
+  listMethods,
+  {
+    getItemLabel,
+    getItemId
+  }
 );
 
 Combo.propTypes = {
@@ -575,10 +591,9 @@ Combo.defaultProps = {
   onItemMouseEnter: (item, id, index) => {},
 
   filter: (value, array, props) => {
-    const displayProperty = props.displayProperty
 
     return array.filter(item => {
-      return item[displayProperty].indexOf(value) != -1
+      return getItemLabel(item, props).indexOf(value) != -1
     })
   },
 
