@@ -10,6 +10,10 @@ var definePlugin = new webpack.DefinePlugin({
 
 module.exports = {
   watchPoll: true,
+  watchOptions: {
+    aggregateTimeout: 300,
+    poll: 1000
+  },
   entry: [
     'webpack-dev-server/client?http://localhost:' + PORT,
     'webpack/hot/only-dev-server',
