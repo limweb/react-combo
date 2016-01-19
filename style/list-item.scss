@@ -1,7 +1,7 @@
 .react-combo__list-item {
   padding: 4px 10px;
   cursor: pointer;
-  overflow: auto;
+  overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
