@@ -10,6 +10,7 @@ $selected: #c7e5ee;
 
 .react-combo__list-item--current {
   background: #e6f2ff;
+  background: red;
 }
 .react-combo__list-item--selected {
   background: $selected;

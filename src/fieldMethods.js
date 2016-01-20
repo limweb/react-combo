@@ -175,11 +175,18 @@ const navigate = function (dir) {
   dir = dir < 0? -1: 1
 
   const currentIndex = this.p.currentIndex
+  const listPosition = this.p.listPosition
 
   let newCurrentIndex
 
   if (currentIndex == null ){
-    newCurrentIndex = 0
+    // if listPosition is not defined default to 0, it is bottom to 0 else to last data item
+    if (listPosition === undefined || listPosition === 'bottom') {
+      newCurrentIndex = 0
+    } else {
+      newCurrentIndex = this.p.data.length - 1
+    }
+  
   } else {
     newCurrentIndex = clamp(currentIndex + dir, 0, this.p.data.length - 1)
   }

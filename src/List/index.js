@@ -33,12 +33,17 @@ export default class List extends Component {
       return null
     }
 
-    const data = this.props.data;
+    let data = this.props.data
+    
+    const listPosition = props.listPosition || 'bottom'
+    if (listPosition === 'top') {
+      data = data.slice().reverse()
+    }
 
     const className = join(
       props.className,
       'react-combo__list',
-      `react-combo__list--${props.listPosition || 'bottom'}`,
+      `react-combo__list--${listPosition}`,
       props.loading && 'react-combo__list--loading',
       !data.length && 'react-combo__list--empty'
     )
@@ -67,11 +72,19 @@ export default class List extends Component {
   }
 
   componentDidUpdate(prevProps){
-    if (prevProps.currentIndex != this.props.currentIndex){
-      const index = this.props.currentIndex;
+    const props = this.props
+    const currentIndex = props.currentIndex;
+    const listPosition = props.listPosition
 
-      if (index != null){
-        this.scrollToRow(index, index - (prevProps.currentIndex || 0) < 0? -1: 1)
+    // if index is falsy and listPosition, list should be scrolled to bottom
+    if (currentIndex == null && listPosition === 'top') {
+      this.scrollBottom()
+    }
+
+    if (prevProps.currentIndex != currentIndex){
+
+      if (currentIndex != null){
+        this.scrollToRow(currentIndex, currentIndex - (prevProps.currentIndex || 0) < 0? -1: 1)
       }
     }
   }
@@ -81,6 +94,12 @@ export default class List extends Component {
     const row = domNode? domNode.children[index]: null
 
     scrollToRowIfNeeded(row, direction)
+  }
+
+  scrollBottom(){
+    const domNode = findDOMNode(this)
+
+    domNode.scrollTop = domNode.offsetHeight
   }
 
   renderItem(item, index){
