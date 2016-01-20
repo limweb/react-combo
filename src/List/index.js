@@ -38,7 +38,7 @@ export default class List extends Component {
     const className = join(
       props.className,
       'react-combo__list',
-      'react-combo__list--' + props.listPosition,
+      `react-combo__list--${props.listPosition || 'bottom'}`,
       props.loading && 'react-combo__list--loading',
       !data.length && 'react-combo__list--empty'
     )
@@ -123,7 +123,6 @@ export default class List extends Component {
 }
 
 List.defaultProps = {
-  listPosition: 'bottom',
   isComboList: true,
 
   onItemMouseDown: () => {},
