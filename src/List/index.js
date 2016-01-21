@@ -15,7 +15,8 @@ export default class List extends Component {
     super(props)
 
     this.state = {
-      currentIndex: props.defaultCurrentIndex
+      currentIndex: props.defaultCurrentIndex,
+      direction: 0
     }
   }
 
@@ -33,18 +34,19 @@ export default class List extends Component {
       return null
     }
 
-    const data = this.props.data;
-
+    let data = this.props.data
+    const listPosition = props.listPosition || 'bottom'
+    
     const className = join(
       props.className,
       'react-combo__list',
-      'react-combo__list--' + props.listPosition,
+      `react-combo__list--${listPosition}`,
       props.loading && 'react-combo__list--loading',
       !data.length && 'react-combo__list--empty'
     )
 
     return <ul {...props} data={null} className={className}>
-      {data.map(this.renderItem)}
+      {this.renderItems(data, listPosition)}
       {this.renderEmptyText()}
       {this.renderLoadingText()}
     </ul>
@@ -67,25 +69,56 @@ export default class List extends Component {
   }
 
   componentDidUpdate(prevProps){
-    if (prevProps.currentIndex != this.props.currentIndex){
-      const index = this.props.currentIndex;
+    const props = this.props
+    const currentIndex = props.currentIndex;
+    const listPosition = props.listPosition
 
-      if (index != null){
-        this.scrollToRow(index, index - (prevProps.currentIndex || 0) < 0? -1: 1)
+    // when list is expanded and currentIndex is not set, scroll bottom
+    if (currentIndex == null && listPosition === 'top') {
+      this.scrollBottom()
+    }
+
+    if (prevProps.currentIndex != currentIndex){
+      if (currentIndex != null){
+        const direction = currentIndex - (prevProps.currentIndex || 0) < 0? -1: 1
+
+        this.scrollToRow(currentIndex, direction * this.getDirectionSign())
       }
     }
   }
 
   scrollToRow(index, direction){
-    const domNode = findDOMNode(this)
-    const row = domNode? domNode.children[index]: null
-
+    const el = this.refs[`list-item-${index}`]
+    const row = findDOMNode(el)
+    
     scrollToRowIfNeeded(row, direction)
+  }
+
+  scrollBottom(){
+    const domNode = findDOMNode(this)
+
+    if (domNode) {
+      domNode.scrollTop = domNode.offsetHeight
+    }
+  }
+
+  renderItems(data, listPosition){
+      if (listPosition === 'bottom') {
+        return data.map(this.renderItem)
+      }
+
+      if (listPosition === 'top') {
+        return data.reduceRight((acc, item, index) => {
+          acc.push(this.renderItem(item, index))
+
+          return acc
+        }, [])
+      }
   }
 
   renderItem(item, index){
     const selected = hasOwn(this.props.selectedMap, id)
-
+    
     const getItemId = this.props.getItemId
     const getItemLabel = this.props.getItemLabel
 
@@ -110,7 +143,7 @@ export default class List extends Component {
       renderItem: this.props.renderItem
     }
 
-    return <Item {...itemProps} />
+    return <Item ref={`list-item-${index}`} {...itemProps} />
   }
 
   onItemMouseDown(item, id, index, event){
@@ -120,10 +153,13 @@ export default class List extends Component {
   onItemMouseEnter(item, id, index, event){
     this.props.onItemMouseEnter(item, id, index, event)
   }
+
+  getDirectionSign (){
+    return this.p.listPosition === 'bottom'? 1 : -1
+  }
 }
 
 List.defaultProps = {
-  listPosition: 'bottom',
   isComboList: true,
 
   onItemMouseDown: () => {},
