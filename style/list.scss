@@ -11,6 +11,8 @@
   max-height: 50vmin;
   overflow: auto;
   border: 1px solid $gray;
+  background: #fff;
+  z-index: 50;
 }
 
 .react-combo__list--bottom {

@@ -1,0 +1,39 @@
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif; 
+  background: #F1F1F1;
+}
+
+.app {
+  padding-top: 40px;
+  max-width: 960px;
+  margin: 0 auto;
+  background: #fff;
+  height: 100vh;
+  padding: 20px;
+}
+
+h1 {
+  margin-top: 0;
+  padding-top: 50px;
+  margin-bottom: 100px;
+}
+
+h2 {
+  margin-bottom: 10px;
+}
+
+section {
+  margin-bottom: 100px;
+}

@@ -11,10 +11,20 @@ import gen from './generate'
 
 let LEN = 20;
 
-var initialData = gen(LEN)
+// var initialData = gen(LEN)
+
+var initialData
+
+// initialData = JSON.parse(localStorage.getItem('data'))
+
+if (!initialData) {
+  initialData = gen(LEN)
+
+  // localStorage.setItem('data', JSON.stringify(initialData))
+}
+
 var data = initialData.concat()
 
-console.log(data)
 const dataSource = new Promise((resolve, reject) => {
   setTimeout(() => {
     resolve(data)
@@ -26,13 +36,6 @@ function renderItem(props){
   return <li {...props}>{props.data.lastName}!!!!</li>
 }
 
-const tool = (props) => {
-  props.children = props.expanded? 'a':'b'
-
-}
-
-const renderTag = (props) => {
-}
 
 let value = null
 
@@ -42,23 +45,40 @@ class App extends Component {
     this.setState({})
   }
   render(){
-    return <div className="App" style={{padding: 10, marginTop: '6vh', height: 40}}>
-      <input type="text" defaultValue="a test input" />
-      {JSON.stringify(value)}
-      <Combo
-        renderTag={renderTag}
-        multiSelect
-        expanded
-        renderExpandTool={tool}
-        defaultValue={value}
-        idProperty={x=> x.id+'!'}
-        onChange={this.onChange}
-        dataSource={data}
-      >
-        <List displayProperty="email" />
-      </Combo>
+    return <div className="app">
+      <h1>React Combo</h1>
 
-      <input type="text" defaultValue="second input" />
+      <section>
+        <h2>Simple Select</h2>
+        <Combo
+          multiSelect
+          defaultValue={value}
+          onChange={this.onChange}
+          dataSource={data}
+          listPosition="bottom"
+          expandOnFocus={true}
+        >
+          <List 
+            displayProperty="email" 
+          />
+        </Combo>
+      </section>
+
+      <section>
+        <h2>Multiselect</h2>
+        <Combo
+          multiSelect
+          defaultValue={value}
+          onChange={this.onChange}
+          dataSource={data}
+          listPosition="bottom"
+          expandOnFocus={true}
+        >
+          <List 
+            displayProperty="email" 
+          />
+        </Combo>
+      </section>
     </div>
   }
 }
