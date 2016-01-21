@@ -80,7 +80,7 @@ Property | Type | Default | Description
 `onTextChange` | Function | - | called when text is changed in the filtering input.
 
 
- ## Development
+## Development
 
  ```sh
  $ git clone https://github.com/zippyui/react-combo.git
@@ -88,8 +88,8 @@ Property | Type | Default | Description
  $ npm run dev
  ```
 
- Navigate to [http://localhost:9090/]
+Navigate to [http://localhost:9090/]
 
- ## License
+## License
 
- #### MIT
+#### MIT
