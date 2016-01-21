@@ -173,6 +173,7 @@ const onFieldKeyDown = function(event){
 const navigate = function (dir) {
 
   dir = dir < 0? -1: 1
+  dir *= this.getDirectionSign()
 
   const currentIndex = this.p.currentIndex
   const listPosition = this.p.listPosition
@@ -180,13 +181,7 @@ const navigate = function (dir) {
   let newCurrentIndex
 
   if (currentIndex == null ){
-    // if listPosition is not defined default to 0, it is bottom to 0 else to last data item
-    if (listPosition === undefined || listPosition === 'bottom') {
-      newCurrentIndex = 0
-    } else {
-      newCurrentIndex = this.p.data.length - 1
-    }
-  
+    newCurrentIndex = 0 
   } else {
     newCurrentIndex = clamp(currentIndex + dir, 0, this.p.data.length - 1)
   }
@@ -289,6 +284,10 @@ const onHiddenFieldKeyDown = function(event){
   }
 }
 
+const getDirectionSign = function(){
+  return this.p.listPosition === 'bottom'? 1 : -1
+}
+
 export default {
   renderField,
   onFieldFocus,
@@ -301,6 +300,7 @@ export default {
   onHiddenFieldFocus,
   onHiddenFieldBlur,
   onHiddenFieldKeyDown,
+  getDirectionSign,
   getSelectionStart(){
     return getSelectionStart(findDOMNode(this.field))
   },
