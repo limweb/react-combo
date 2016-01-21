@@ -84,12 +84,10 @@ export default class List extends Component {
   }
 
   renderItem(item, index){
-    const selected = hasOwn(this.props.selectedMap, id)
-
     const getItemId = this.props.getItemId
     const getItemLabel = this.props.getItemLabel
-
     const id = getItemId(item)
+    const selected = hasOwn(this.props.selectedMap, id)
 
     const itemProps = {
       key: id,
