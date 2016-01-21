@@ -88,7 +88,7 @@ Property | Type | Default | Description
  $ npm run dev
  ```
 
-Navigate to [http://localhost:9090/]
+Navigate to [http://localhost:9090/](http://localhost:9090/)
 
 ## License
 
