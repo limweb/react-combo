@@ -66,7 +66,7 @@ Property | Type | Default | Description
 `displayProperty` | String\|Function | - | the name of the property to be displayed for each item in the dataSource. If the displayProperty is a function, it will be called with the item object and expected to return the item display value.
 `value` | String\|Number\|Array | - | a single value, or an array of values, if you want to have multiselect.
 `expanded` | Boolean | - | if you want to control the expanded prop (when this is true, the list is visible).
-`defaultExpanded` | Boolean | - | defaults to false. Uncontrolled version of `expanded`.
+`defaultExpanded` | Boolean | false | uncontrolled version of `expanded`.
 `onChange(value)` | Function | - | the onChange callback. Will be called with a value or an array of values.
 `renderItem(props)` | Function | - | a function that can be used to customize how an item is rendered. If you return a React Node, the node will be rendered. If instead you only modify the props passed into this fn and return undefined, those props will be reflected on the default renderItem implementation. You can also use `displayProperty: Function` to render something else for each item.
 `renderTag(props)` | Function | - | a function that can be used to customize how a selected item is rendered in the combo
