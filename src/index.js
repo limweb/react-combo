@@ -164,7 +164,7 @@ export default class Combo extends Component {
 
   render(){
     const props = this.p = this.prepareProps(this.props)
-    let expanded
+    const expanded = props.expanded
 
     const list = this.renderList(props)
     const tags = this.renderTags(props)
@@ -506,7 +506,7 @@ export default class Combo extends Component {
       'react-combo--list-' + props.listPosition,
       props.focused && join(props.focusedClassName, 'react-combo--focused'),
       props.expanded && join(props.expandedClassName, 'react-combo--expanded'),
-      props.disabled && join(props.disabledClassName), 'react-combo--disabled'
+      props.disabled && join(props.disabledClassName, 'react-combo--disabled')
     )
 
     return props
