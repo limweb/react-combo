@@ -19,7 +19,8 @@ const renderField = function(props) {
     onFocus: this.onFieldFocus,
     onBlur: this.onFieldBlur,
     onKeyDown: this.onFieldKeyDown,
-    onChange: this.onFieldChange
+    onChange: this.onFieldChange,
+    disabled: !!props.disabled
   })
 
   if (props.dropdown){

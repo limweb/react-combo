@@ -164,7 +164,7 @@ export default class Combo extends Component {
 
   render(){
     const props = this.p = this.prepareProps(this.props)
-    const expanded = props.expanded
+    let expanded
 
     const list = this.renderList(props)
     const tags = this.renderTags(props)
@@ -172,10 +172,18 @@ export default class Combo extends Component {
 
     const loading = this.p.loading
 
+    let tabIndex
+
+    if (props.disabled) {
+      tabIndex = -1
+    } else {
+      tabIndex = this.state.focused? -1: this.props.tabIndex || 0
+    }
+
     return <div
       {...props}
       data={null}
-      tabIndex={this.state.focused? -1: this.props.tabIndex || 0}
+      tabIndex={tabIndex}
       onFocus={this.onFocus}
     >
       {tags}
@@ -221,7 +229,11 @@ export default class Combo extends Component {
     const tagProps = {
       key: id,
       onMouseDown: this.onTagMouseDown.bind(this, item, index),
-      className: join('react-combo__value-tag', active? 'react-combo__value-tag--active': null),
+      className: join(
+          'react-combo__value-tag', 
+          active? 'react-combo__value-tag--active': null,
+          props.disabled? 'react-combo__value-tag--disabled': null
+        ),
       item: item,
       idProperty: props.idProperty,
       displayProperty: props.displayProperty,
@@ -247,6 +259,10 @@ export default class Combo extends Component {
     event.preventDefault()
     event.stopPropagation()
 
+    if (this.props.disabled) {
+      return false
+    }
+
     this.removeAt(index)
   }
 
@@ -254,8 +270,11 @@ export default class Combo extends Component {
     event.preventDefault()
     event.stopPropagation()
 
-    this.setActiveTag(index)
+    if (this.props.disabled) {
+      return false
+    }
 
+    this.setActiveTag(index)
 
     // if (!this.state.focused){
     //   this.focusHiddenField()
@@ -466,7 +485,12 @@ export default class Combo extends Component {
     props.activeTagIndex = this.state.activeTagIndex
     props.text = props.text === undefined? this.state.text: props.text
     props.focused = this.state.focused
-    props.expanded = props.expanded === undefined? this.state.expanded: props.expanded
+    
+    if (!props.disabled) {
+      props.expanded = props.expanded === undefined? this.state.expanded: props.expanded
+    } else {
+      props.expanded = false
+    }
 
     let currentIndex = thisProps.currentIndex == null? this.state.currentIndex: thisProps.currentIndex
 
@@ -481,7 +505,8 @@ export default class Combo extends Component {
       props.className,
       'react-combo--list-' + props.listPosition,
       props.focused && join(props.focusedClassName, 'react-combo--focused'),
-      props.expanded && join(props.expandedClassName, 'react-combo--expanded')
+      props.expanded && join(props.expandedClassName, 'react-combo--expanded'),
+      props.disabled && join(props.disabledClassName), 'react-combo--disabled'
     )
 
     return props

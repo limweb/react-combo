@@ -47,6 +47,13 @@
   left: 100%;
 }
 
+.react-combo--disabled {
+  background: #EBEBE4;
+  &:focus {
+    outline: 0;
+  }
+}
+
 @import './tag';
 @import './list';
 @import './expand-tool';
