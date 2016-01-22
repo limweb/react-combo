@@ -26,7 +26,8 @@ const renderList = function(props) {
     listPosition: props.listPosition,
     selectedMap: props.selectedMap,
     onItemMouseDown: this.onItemMouseDown,
-    onItemMouseEnter: this.onItemMouseEnter
+    onItemMouseEnter: this.onItemMouseEnter,
+    listRemoveSelected: props.listRemoveSelected
   }
 
   if (props.childList){

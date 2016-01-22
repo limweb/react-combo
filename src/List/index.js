@@ -122,6 +122,10 @@ export default class List extends Component {
     const id = getItemId(item)
     const selected = hasOwn(this.props.selectedMap, id)
 
+    if (selected && this.props.listRemoveSelected) {
+      return false
+    }
+
     const itemProps = {
       key: id,
       data: item,
