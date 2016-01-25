@@ -610,5 +610,7 @@ Combo.defaultProps = {
   idProperty: 'id',
   displayProperty: 'label',
   disabledProperty: 'disabled',
-  listPosition: 'bottom'
+  listPosition: 'bottom',
+
+  listRemoveSelected: false
 }

@@ -168,7 +168,8 @@ List.defaultProps = {
   onItemMouseEnter: () => {},
 
   emptyText: 'Nothing to display.',
-  loadingText: 'Loading...'
+  loadingText: 'Loading...',
+  listRemoveSelected: false
 }
 
 List.propTypes = {
@@ -178,5 +179,6 @@ List.propTypes = {
   visible: PropTypes.bool,
   data: PropTypes.array,
   emptyText: PropTypes.node,
-  loadingText: PropTypes.node
+  loadingText: PropTypes.node,
+  listRemoveSelected: PropTypes.bool
 }
