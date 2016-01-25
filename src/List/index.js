@@ -142,7 +142,11 @@ export default class List extends Component {
       onMouseDown: this.onItemMouseDown.bind(this, item, id, index),
       onMouseEnter: this.onItemMouseEnter.bind(this, item, id, index),
 
-      renderItem: this.props.renderItem
+      renderItem: this.props.renderItem,
+    }
+
+    if (selected && this.props.listDisableSelected) {
+      itemProps.onMouseDown = null
     }
 
     return <Item ref={`list-item-${index}`} {...itemProps} />
@@ -169,7 +173,8 @@ List.defaultProps = {
 
   emptyText: 'Nothing to display.',
   loadingText: 'Loading...',
-  listRemoveSelected: false
+  listRemoveSelected: false,
+  listDisableSelected: false
 }
 
 List.propTypes = {
@@ -180,5 +185,6 @@ List.propTypes = {
   data: PropTypes.array,
   emptyText: PropTypes.node,
   loadingText: PropTypes.node,
-  listRemoveSelected: PropTypes.bool
+  listRemoveSelected: PropTypes.bool,
+  listDisableSelected: PropTypes.bool 
 }

@@ -612,5 +612,6 @@ Combo.defaultProps = {
   disabledProperty: 'disabled',
   listPosition: 'bottom',
 
-  listRemoveSelected: false
+  listRemoveSelected: false,
+  listDisableSelected: false
 }

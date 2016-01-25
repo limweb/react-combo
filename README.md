@@ -78,7 +78,8 @@ Property | Type | Default | Description
 `defaultText` | String | - | -
 `text` | String | - | the text to show in the filtering input, controlled version of `defaultText`.
 `onTextChange` | Function | - | called when text is changed in the filtering input.
-`listRemoveSelected` | Booleon | false | selected items are removed from the list
+`listRemoveSelected` | Booleon | false | selected items are removed from the list.
+`listDisableSelected` | Booleon | false | onClick listener is removed on list selected items.
 
 
 ## Development
