@@ -573,7 +573,8 @@ assign(
 );
 
 Combo.propTypes = {
-  renderExpandTool: PropTypes.func
+  renderExpandTool: PropTypes.func,
+  listRemoveSelected: PropTypes.bool
 }
 
 Combo.defaultProps = {
