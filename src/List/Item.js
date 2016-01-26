@@ -20,7 +20,7 @@ export default class Item extends Component {
       props.selected?
         'react-combo__list-item--selected':
           null,
-      props.selected?
+      props.disabled?
         'react-combo__list-item--disabled':
           null
     )
