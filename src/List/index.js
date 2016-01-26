@@ -121,6 +121,7 @@ export default class List extends Component {
     const getItemLabel = this.props.getItemLabel
     const id = getItemId(item)
     const selected = hasOwn(this.props.selectedMap, id)
+    const disabled = selected && this.props.listDisableSelected
 
     if (selected && this.props.listRemoveSelected) {
       return false
@@ -143,9 +144,11 @@ export default class List extends Component {
       onMouseEnter: this.onItemMouseEnter.bind(this, item, id, index),
 
       renderItem: this.props.renderItem,
+
+      disabled
     }
 
-    if (selected && this.props.listDisableSelected) {
+    if (disabled) {
       itemProps.onMouseDown = null
     }
 
