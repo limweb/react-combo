@@ -47,3 +47,24 @@
 .react-combo__value-tag:last-child {
   margin-right: 5px;
 }
+
+
+.react-combo__value-tag--enter {
+  opacity: 0.01;
+  transform: scale(0.3);
+}
+.react-combo__value-tag--enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 150ms ease-in;
+}
+
+.react-combo__value-tag--leave {
+  opacity: 1;
+  transform: scale(1);
+} 
+.react-combo__value-tag--leave-active {
+  opacity: 0.01;
+  transform: scale(0.3);
+  transition: all 150ms ease-in;
+}

@@ -15,7 +15,7 @@ const renderField = function(props) {
     value: props.text,
     tabIndex: -1,
     ref: (f) => this.field = f,
-
+    key: 'input-field',
     onFocus: this.onFieldFocus,
     onBlur: this.onFieldBlur,
     onKeyDown: this.onFieldKeyDown,

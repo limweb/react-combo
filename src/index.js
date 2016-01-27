@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react'
 import { findDOMNode } from 'react-dom'
 import Component from 'react-class'
 import assign from 'object-assign'
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
 
 import Field from 'react-field'
 import hasOwn from 'hasown'
@@ -199,7 +200,11 @@ export default class Combo extends Component {
       field
     ]
 
-    return <div className="react-combo__value-tags" children={tags} />
+    return <div className="react-combo__value-tags">
+      <ReactCSSTransitionGroup transitionName="react-combo__value-tag-" transitionEnterTimeout={150} transitionLeaveTimeout={150}>
+        {tags}
+      </ReactCSSTransitionGroup>
+    </div>
   }
 
   renderItemTag(item, index) {
