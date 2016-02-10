@@ -202,7 +202,7 @@ export default class Combo extends Component {
     return <div className="react-combo__value-tags" children={tags} />
   }
 
-  renderItemTag(item, index) {
+  renderItemTag(item, index, selectedItems) {
     const props = this.p
 
     const id = this.getItemId(item)
@@ -228,7 +228,9 @@ export default class Combo extends Component {
       children: [
         clearTool,
         <InlineBlock key="label" className="react-combo__value-tag-label">{label}</InlineBlock>
-      ]
+      ],
+      index,
+      selectedItems
     }
 
     let result
