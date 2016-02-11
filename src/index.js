@@ -644,6 +644,5 @@ Combo.defaultProps = {
   displayProperty: 'label',
   disabledProperty: 'disabled',
   listPosition: 'bottom',
-  activeTagIndex: false,
   defaultActiveTagIndex: -1
 }
