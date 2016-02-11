@@ -50,7 +50,7 @@ export default class Combo extends Component {
       dataMap: {},
       filterValue: '',
       text: props.defaultText || '',
-      activeTagIndex: -1
+      activeTagIndex: props.defaultActiveTagIndex
     }
   }
 
@@ -322,6 +322,8 @@ export default class Combo extends Component {
       this.focusHiddenField()
     }
 
+    this.props.onActiveTagIndexChange(index)
+
     this.setState({
       activeTagIndex: index
     })
@@ -484,7 +486,7 @@ export default class Combo extends Component {
 
     this.prepareValue(props)
 
-    props.activeTagIndex = this.state.activeTagIndex
+    props.activeTagIndex = props.activeTagIndex || this.state.activeTagIndex
     props.text = props.text === undefined? this.state.text: props.text
     props.focused = this.state.focused
     
@@ -600,7 +602,8 @@ assign(
 );
 
 Combo.propTypes = {
-  renderExpandTool: PropTypes.func
+  renderExpandTool: PropTypes.func,
+  onActiveTagIndexChange: PropTypes.func
 }
 
 Combo.defaultProps = {
@@ -613,6 +616,7 @@ Combo.defaultProps = {
   onDeselect: (item, selectedItems) => {},
   onChange: () => {},
   onTextChange: () => {},
+  onActiveTagIndexChange: () => {},
 
   onItemMouseDown: (item, id, index) => {},
   onItemMouseEnter: (item, id, index) => {},
@@ -636,5 +640,7 @@ Combo.defaultProps = {
   idProperty: 'id',
   displayProperty: 'label',
   disabledProperty: 'disabled',
-  listPosition: 'bottom'
+  listPosition: 'bottom',
+  activeTagIndex: false,
+  defaultActiveTagIndex: -1
 }
