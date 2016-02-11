@@ -486,7 +486,10 @@ export default class Combo extends Component {
 
     this.prepareValue(props)
 
-    props.activeTagIndex = props.activeTagIndex || this.state.activeTagIndex
+    props.activeTagIndex = (!!props.activeTagIndex || props.activeTagIndex === 0)? 
+                            props.activeTagIndex : 
+                            this.state.activeTagIndex
+    
     props.text = props.text === undefined? this.state.text: props.text
     props.focused = this.state.focused
     
