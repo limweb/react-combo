@@ -1,6 +1,11 @@
 react-combo
 ===========
 
+
+#### 0.4.1
+* add disable prop
+* add index and selected items parameters to rendertag
+
 #### 0.4.0
  * add function support for `idProperty` and `displayProperty`
  

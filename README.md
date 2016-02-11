@@ -78,7 +78,7 @@ Property | Type | Default | Description
 `defaultText` | String | - | -
 `text` | String | - | the text to show in the filtering input, controlled version of `defaultText`.
 `onTextChange` | Function | - | called when text is changed in the filtering input.
-
+`disabled` | Boolean | false | prevent all actions on combo: new selection, clear selection.
 
 ## Development
 
