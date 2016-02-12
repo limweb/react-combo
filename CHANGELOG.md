@@ -2,6 +2,9 @@ react-combo
 ===========
 
 
+#### 0.4.2
+* Fix unhandled onBlur event on root element
+
 #### 0.4.1
 * add disable prop
 * add index and selected items parameters to rendertag
