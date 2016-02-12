@@ -185,6 +185,8 @@ export default class Combo extends Component {
       data={null}
       tabIndex={tabIndex}
       onFocus={this.onFocus}
+      onBlur={null}
+      onMouseDown={this.onMouseDown}
     >
       {tags}
       {hidden}
@@ -257,6 +259,12 @@ export default class Combo extends Component {
     return result
   }
 
+  onMouseDown(event){
+    if (this.state.focused) {
+      event.preventDefault()
+    }
+  }
+
   onClearTagMouseDown(index, event){
     event.preventDefault()
     event.stopPropagation()
@@ -309,7 +317,7 @@ export default class Combo extends Component {
     this.focusField()
   }
 
-  onBlur(){
+  onBlur(event){
     this.props.onBlur()
   }
 
