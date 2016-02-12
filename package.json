@@ -1,11 +1,12 @@
 {
   "name": "react-combo",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "React Combo",
   "main": "lib/index.js",
   "scripts": {
     "dev": "webpack-dev-server --progress --colors --config ./build/dev.config.js",
     "lib": "gulp",
+    "prepublish": "npm run lib",
     "build-style": "webpack -p --config ./build/style.config.js",
     "build": "npm run lib && npm run build-style"
   },
