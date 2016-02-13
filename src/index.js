@@ -18,7 +18,8 @@ import clamp from './clamp'
 
 import List from './List'
 
-export { default as List } from './List'
+
+export { List }
 
 const getItemId = function(item, props){
   const idProperty = (props || this.p || this.props).idProperty
@@ -232,7 +233,7 @@ export default class Combo extends Component {
       key: id,
       onMouseDown: this.onTagMouseDown.bind(this, item, index),
       className: join(
-          'react-combo__value-tag', 
+          'react-combo__value-tag',
           active? 'react-combo__value-tag--active': null,
           props.disabled? 'react-combo__value-tag--disabled': null
         ),
@@ -494,13 +495,13 @@ export default class Combo extends Component {
 
     this.prepareValue(props)
 
-    props.activeTagIndex = (!!props.activeTagIndex || props.activeTagIndex === 0)? 
-                            props.activeTagIndex : 
+    props.activeTagIndex = (!!props.activeTagIndex || props.activeTagIndex === 0)?
+                            props.activeTagIndex :
                             this.state.activeTagIndex
-    
+
     props.text = props.text === undefined? this.state.text: props.text
     props.focused = this.state.focused
-    
+
     if (!props.disabled) {
       props.expanded = props.expanded === undefined? this.state.expanded: props.expanded
     } else {
