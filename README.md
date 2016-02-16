@@ -25,7 +25,7 @@ const data = [
 ]
 
 <Combo
-  data={data}
+  dataSource={data}
   idProperty="id"
   displayProperty="label"
   defaultValue={[1,2]}
@@ -38,7 +38,7 @@ import 'react-combo/index.css'
 
 
 <Combo
-  data={data}
+  dataSource={data}
   idProperty="id"
   displayProperty="label"
   defaultValue={[1,2]}
